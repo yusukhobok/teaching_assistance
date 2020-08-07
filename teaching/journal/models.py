@@ -49,7 +49,8 @@ class Student(models.Model):
     class Meta:
         ordering = ["name"]
         constraints = [
-            models.UniqueConstraint(fields=['name', 'grade_book_number'], name='unique student'),
+            models.UniqueConstraint(
+                fields=['name', 'grade_book_number'], name='unique student'),
         ]
         verbose_name = "Студент"
         verbose_name_plural = "Студенты"
@@ -67,14 +68,15 @@ class Group(models.Model):
     course_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(6)], verbose_name="Курс")
     semester = models.ForeignKey('Semester', on_delete=models.CASCADE)
-    head_student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    head_student = models.ForeignKey(
+        'Student', on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ["group_number"]
         constraints = [
             models.UniqueConstraint(
                 fields=['group_number', 'semester'], name='unique group'),
-        ]        
+        ]
         verbose_name = "Семестр"
         verbose_name_plural = "Семестры"
 
@@ -91,6 +93,7 @@ class StudentInGroup(models.Model):
 
 class Discipline(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название")
+    short_name = models.CharField(max_length=20, verbose_name="Сокращенное название")
     semester = models.ForeignKey('Semester', on_delete=models.CASCADE)
 
     class Meta:
@@ -98,7 +101,7 @@ class Discipline(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['name', 'semester'], name='unique discipline'),
-        ]        
+        ]
         verbose_name = "Дисциплина"
         verbose_name_plural = "Дисциплины"
 
@@ -224,7 +227,7 @@ class ControlPoints(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['discipline', 'date'], name='unique control point'),
-        ]   
+        ]
         verbose_name = "Контрольная точка"
         verbose_name_plural = "Контрольные точки"
 

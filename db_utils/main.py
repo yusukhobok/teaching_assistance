@@ -1,9 +1,10 @@
+import datetime
+import os
 import pandas as pd
 import psycopg2
-from psycopg2.sql import SQL
 from contextlib import closing
+from psycopg2.sql import SQL
 from typing import Tuple, Dict, Sequence
-from datetime 
 
 
 class db():
@@ -14,6 +15,21 @@ class db():
         'host': '127.0.0.1',
         'port': '5432',
     }
+
+    TABLES = ("journal_rating",
+              "journal_progress",
+              "journal_attendance",
+              "journal_controlpoints",
+              "journal_lessoningroup",
+              "journal_lesson",
+              "journal_taskingroup",
+              "journal_task",
+              "journal_discipline",
+              "journal_studentingroup",
+              "journal_student",
+              "journal_group",
+              "journal_semester",
+              )
 
     @staticmethod
     def apply_to_db(*args):
@@ -45,6 +61,13 @@ class db():
                     yield row
 
     @staticmethod
+    def clear_all():
+        with closing(psycopg2.connect(**db.SETTINGS)) as conn:
+            with conn.cursor() as cursor:
+                for table in db.TABLES:
+                    db.apply_to_db(SQL(f"DELETE FROM {table}"))
+
+    @staticmethod
     def insert_record(table_name: str, params: dict):
         keys = list(params.keys())
         values = list(params.values())
@@ -73,26 +96,26 @@ def insert_semester(academic_year: str, season: int):
         raise ValueError("Academic year is incorrect")
     if season not in (1, 2):
         raise ValueError("Season must be 1 or 2")
-    id_semester = db.insert_record('journal_semester',
+    semester_id = db.insert_record('journal_semester',
                                    {
                                        "academic_year": academic_year,
                                        "season": season
                                    })
-    return id_semester
+    return semester_id
 
 
-def insert_group(group_number: str, course_number: int, id_semester: int):
-    id_group = db.insert_record('journal_group',
+def insert_group(group_number: str, course_number: int, semester_id: int):
+    group_id = db.insert_record('journal_group',
                                 {
                                     "group_number": group_number,
                                     "course_number": course_number,
-                                    "id_semester": id_semester
+                                    "semester_id": semester_id
                                 })
-    return id_group
+    return group_id
 
 
 def insert_student(name: str, grade_book_number: str, email: str = "", phone: str = "", profile: str = "", comments: str = "", expelled: bool = False):
-    id_student = db.insert_record('journal_student',
+    student_id = db.insert_record('journal_student',
                                   {
                                       "name": name,
                                       "grade_book_number": grade_book_number,
@@ -102,130 +125,131 @@ def insert_student(name: str, grade_book_number: str, email: str = "", phone: st
                                       "comments": comments,
                                       "expelled": expelled
                                   })
-    return id_student
+    return student_id
 
 
-def import_students_from_CSV(filename: str, id_group: int):
+def import_students_from_CSV(filename: str, group_id: int):
     students_data = pd.read_csv(filename, sep=';', header=0)
     students_data.fillna('', inplace=True)
     print(students_data)
-    students_data.apply(add_student, axis=1)
 
     def add_student(row):
-        id_student = insert_student(row['name'], row['grade_book_number'],
+        student_id = insert_student(row['name'], row['grade_book_number'],
                                     row['email'], row['phone'], row['profile'], row['comments'])
         db.insert_record('journal_studentingroup',
                          {
-                             "student": id_student,
-                             "group": id_group,
+                             "student_id": student_id,
+                             "group_id": group_id,
                              "subgroup_number": row['subgroup_number']
                          })
+    students_data.apply(add_student, axis=1)
 
 
-def insert_discipline(name: str, id_semester: int):
-    id_discipline = db.insert_record('journal_discipline',
+def insert_discipline(name: str, short_name: str, semester_id: int):
+    discipline_id = db.insert_record('journal_discipline',
                                      {
                                          "name": name,
-                                         "semester": id_semester
+                                         "short_name": short_name,
+                                         "semester_id": semester_id
                                      })
-    return id_discipline
+    return discipline_id
 
 
-def insert_task(deadline: str, topic: str, abbreviation: str, task_kind: str, comments: str, id_discipline: int):
+def insert_task(deadline: str, topic: str, abbreviation: str, task_kind: str, comments: str, discipline_id: int):
     TASK_KINDS = ("LB", "PR", "KONTR", "TEST", "RGR", "KR",
                   "KP", "SECTION", "ALLOW", "ZACHET", "EXAM")
     if task_kind not in TASK_KINDS:
         raise ValueError("Task kind is incorrect")
-    id_task = db.insert_record('journal_task',
+    task_id = db.insert_record('journal_task',
                                {
-                                   "discipline": id_discipline,
+                                   "discipline_id": discipline_id,
                                    "deadline": deadline,
                                    "topic": topic,
                                    "abbreviation": abbreviation,
                                    "task_kind": task_kind,
                                    "comments": comments
                                })
-    return id_task
+    return task_id
 
 
-def import_tasks_from_CSV(filename: str, id_discipline: int, groups_and_subgroups: Tuple[Tuple[int, int]], task_coef: int):
+def import_tasks_from_CSV(filename: str, discipline_id: int, groups_and_subgroups: Tuple[Tuple[int, int]]):
     tasks_data = pd.read_csv(filename, sep=';', header=0)
     tasks_data.fillna('', inplace=True)
-    tasks_data["date_plan"] = pd.to_datetime(tasks_data['deadline'], format='%d.%m.%Y')
+    tasks_data["date_plan"] = pd.to_datetime(
+        tasks_data['deadline'], format='%d.%m.%Y')
     print(tasks_data)
-    tasks_data.apply(add_task, axis=1)
 
     def add_task(row):
-        id_task = insert_task(row['deadline'], row['topic'], row['abbreviation'],
-                              row['task_kind'], row['comments'], id_discipline)
-        for id_group, subgroup_number in groups_and_subgroups:
+        task_id = insert_task(row['deadline'], row['topic'], row['abbreviation'],
+                              row['task_kind'], row['comments'], discipline_id)
+        for group_id, subgroup_number in groups_and_subgroups:
             db.insert_record('journal_taskingroup',
-                            {
-                                "task": id_task,
-                                "group": id_group,
-                                "subgroup_number": subgroup_number,
-                                "task_coef": task_coef
-                            })
+                             {
+                                 "task_id": task_id,
+                                 "group_id": group_id,
+                                 "subgroup_number": subgroup_number,
+                                 "task_coef": row['task_coef']
+                             })
+    tasks_data.apply(add_task, axis=1)
 
 
-def insert_lesson(date_plan: datetime.date, topic: str, abbreviation: str, lesson_kind: str, comments: str, id_discipline: int):
+def insert_lesson(date_plan: datetime.date, topic: str, abbreviation: str, lesson_kind: str, comments: str, discipline_id: int):
     TASK_LESSONS = ("LK", "PR", "LR", "CONS", "EXAM")
     if lesson_kind not in TASK_LESSONS:
         raise ValueError("Lesson kind is incorrect")
-    id_lesson = db.insert_record('journal_lesson',
-                               {
-                                   "discipline": id_discipline,
-                                   "date_plan": date_plan,
-                                   "topic": topic,
-                                   "abbreviation": abbreviation,
-                                   "lesson_kind": lesson_kind,
-                                   "comments": comments
-                               })
-    return id_lesson
+    lesson_id = db.insert_record('journal_lesson',
+                                 {
+                                     "discipline_id": discipline_id,
+                                     "date_plan": date_plan,
+                                     "topic": topic,
+                                     "abbreviation": abbreviation,
+                                     "lesson_kind": lesson_kind,
+                                     "comments": comments
+                                 })
+    return lesson_id
 
 
-def import_lessons_from_CSV(filename: str, id_discipline: int, groups_and_subgroups: Tuple[Tuple[int, int]], lesson_coef: int):
+def import_lessons_from_CSV(filename: str, discipline_id: int, groups_and_subgroups: Tuple[Tuple[int, int]], lesson_coef: int):
     lessons_data = pd.read_csv(filename, sep=';', header=0)
     lessons_data.fillna('', inplace=True)
-    lessons_data["date_plan"] = pd.to_datetime(lessons_data['date_plan'], format='%d.%m.%Y')
+    lessons_data["date_plan"] = pd.to_datetime(
+        lessons_data['date_plan'], format='%d.%m.%Y')
     print(lessons_data)
-    lessons_data.apply(add_lesson, axis=1)
 
     def add_lesson(row):
-        id_lesson = insert_lesson(row['date_plan'], row['topic'], row['abbreviation'],
-                              row['lesson_kind'], row['comments'], id_discipline)
-        for id_group, subgroup_number in groups_and_subgroups:
+        lesson_id = insert_lesson(row['date_plan'], row['topic'], row['abbreviation'],
+                                  row['lesson_kind'], row['comments'], discipline_id)
+        for group_id, subgroup_number in groups_and_subgroups:
             db.insert_record('journal_lessoningroup',
-                            {
-                                "lesson": id_lesson,
-                                "group": id_group,
-                                "subgroup_number": subgroup_number,
-                                "lesson_coef": lesson_coef
-                            })
+                             {
+                                 "lesson_id": lesson_id,
+                                 "group_id": group_id,
+                                 "subgroup_number": subgroup_number,
+                                 "lesson_coef": lesson_coef
+                             })
+    lessons_data.apply(add_lesson, axis=1)
 
 
-def insert_control_point(date: datetime.date, max_score: float, id_discipline: int):
-    id_control_point = db.insert_record('journal_controlpoints',
-                               {
-                                   "discipline": id_discipline,
-                                   "date": date,
-                                   "max_score": max_score
-                               })
-    return id_control_point
+def insert_control_point(date: datetime.date, max_score: float, discipline_id: int):
+    control_point_id = db.insert_record('journal_controlpoints',
+                                        {
+                                            "discipline_id": discipline_id,
+                                            "date": date,
+                                            "max_score": max_score
+                                        })
+    return control_point_id
 
 
-def import_control_points_from_CSV(filename: str, id_discipline: int, max_score: float):
+def import_control_points_from_CSV(filename: str, discipline_id: int, max_score: float):
     control_points_data = pd.read_csv(filename, sep=';', header=0)
     control_points_data.fillna('', inplace=True)
-    control_points_data["date"] = pd.to_datetime(control_points_data['date'], format='%d.%m.%Y')
+    control_points_data["date"] = pd.to_datetime(
+        control_points_data['date'], format='%d.%m.%Y')
     print(control_points_data)
-    control_points_data.apply(add_control_point, axis=1)
 
     def add_control_point(row):
-        insert_control_point(row['date'], row['max_score'], id_discipline)
-
-
-
+        insert_control_point(row['date'], row['max_score'], discipline_id)
+    control_points_data.apply(add_control_point, axis=1)
 
 
 def init_attendance():
@@ -241,4 +265,15 @@ def init_rating():
 
 
 if __name__ == "__main__":
-    import_tasks_from_CSV("db_utils/data/tasks.csv")
+    db.clear_all()
+    semester_id = insert_semester(academic_year="2019/2020", season=2)
+
+    group_id = insert_group(
+        group_number="931", course_number=3, semester_id=semester_id)
+    import_students_from_CSV(
+        filename="db_utils/data/students.csv", group_id=group_id)
+    discipline_id = insert_discipline(
+        name="Web-дизайн", short_name="Web-дизайн", semester_id=semester_id)
+    groups_and_subgroups = ((group_id, 1), (group_id, 2))
+    import_tasks_from_CSV(filename="db_utils/data/tasks.csv",
+                          discipline_id=discipline_id, groups_and_subgroups=groups_and_subgroups)
