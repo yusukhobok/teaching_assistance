@@ -21,7 +21,8 @@ class Semester(models.Model):
     class Meta:
         ordering = ["academic_year", "season"]
         constraints = [
-            models.UniqueConstraint(fields= ['academic_year','season']),
+            models.UniqueConstraint(
+                fields=['academic_year', 'season'], name='unique semester'),
         ]
         verbose_name = "Семестр"
         verbose_name_plural = "Семестры"
@@ -39,7 +40,8 @@ class Student(models.Model):
         max_length=50, verbose_name="Номер зачетной книжки")
     email = models.EmailField(verbose_name="E-mail", blank=True, null=True)
     phone = models.CharField(max_length=50, verbose_name="Телефон")
-    profile = models.URLField(verbose_name="Ссылка на профиль", blank=True, null=True)
+    profile = models.URLField(
+        verbose_name="Ссылка на профиль", blank=True, null=True)
     photo = models.ImageField(verbose_name="Фото", blank=True, null=True)
     comments = models.TextField(verbose_name="Комментарии")
     expelled = models.BooleanField(verbose_name="Отчислен", default=False)
@@ -47,7 +49,7 @@ class Student(models.Model):
     class Meta:
         ordering = ["name"]
         constraints = [
-            models.UniqueConstraint(fields= ['name','grade_book_number']),
+            models.UniqueConstraint(fields=['name', 'grade_book_number'], name='unique student'),
         ]
         verbose_name = "Студент"
         verbose_name_plural = "Студенты"
@@ -69,6 +71,10 @@ class Group(models.Model):
 
     class Meta:
         ordering = ["group_number"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['group_number', 'semester'], name='unique group'),
+        ]        
         verbose_name = "Семестр"
         verbose_name_plural = "Семестры"
 
@@ -89,6 +95,10 @@ class Discipline(models.Model):
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'semester'], name='unique discipline'),
+        ]        
         verbose_name = "Дисциплина"
         verbose_name_plural = "Дисциплины"
 
@@ -130,7 +140,7 @@ class TaskInGroup(models.Model):
     group = models.ForeignKey("Group", on_delete=models.CASCADE)
     subgroup_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(2)], verbose_name="Номер подгруппы", default=1)
-    attendance_coef = models.FloatField(
+    task_coef = models.FloatField(
         validators=[MinValueValidator(0), ], verbose_name="Коэффициент за задание", default=1.0)
 
 
@@ -211,6 +221,10 @@ class ControlPoints(models.Model):
 
     class Meta:
         ordering = ["date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['discipline', 'date'], name='unique control point'),
+        ]   
         verbose_name = "Контрольная точка"
         verbose_name_plural = "Контрольные точки"
 
