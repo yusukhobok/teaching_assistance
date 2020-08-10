@@ -71,8 +71,7 @@ class Group(models.Model):
     course_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(6)], verbose_name="Курс")
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
-    head_student = models.ForeignKey(
-        "Student", on_delete=models.CASCADE, null=True)
+
 
     class Meta:
         ordering = ["semester", "group_number"]
@@ -93,13 +92,16 @@ class StudyingStudent(models.Model):
     subgroup_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(2)], verbose_name="Номер подгруппы", default=1)
     discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
+    is_head = models.BooleanField("Head", default=False)
 
     class Meta:
+        ordering = ["discipline", "group", "student"]
         verbose_name = "Студент учащийся"
         verbose_name_plural = "Студенты учащиеся"
 
     def __str__(self):
-        return f"{self.student} - {self.group} (подгруппа {self.subgroup_number}) - {self.discipline}"
+        head_marker = "!!" if self.is_head else ""
+        return f"{self.student} {head_marker} - {self.group} (подгруппа {self.subgroup_number}) - {self.discipline}"
 
 
 class Discipline(models.Model):
@@ -135,7 +137,7 @@ class Task(models.Model):
                   ("EXAM", "Экзамен"))
     discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     deadline = models.DateField(verbose_name="Дедлайн")
-    topic = models.CharField(max_length=100, verbose_name="Тема")
+    topic = models.CharField(max_length=1000, verbose_name="Тема")
     abbreviation = models.CharField(max_length=20, verbose_name="Сокращение")
     task_kind = models.CharField(
         max_length=10, choices=TASK_KINDS, verbose_name="Вид занятия")
@@ -171,14 +173,14 @@ class Lesson(models.Model):
     LESSON_KINDS = (
         ("LK", "Лекция"),
         ("PR", "Практическое занятие"),
-        ("LR", "Лабораторное занятие"),
+        ("LB", "Лабораторное занятие"),
         ("CONS", "Консультация"),
         ("EXAM", "Экзамен")
     )
     discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     date_plan = models.DateField(verbose_name="Дата (план)")
     date_fact = models.DateField(verbose_name="Дата (факт)")
-    topic = models.CharField(max_length=100, verbose_name="Тема")
+    topic = models.CharField(max_length=1000, verbose_name="Тема")
     abbreviation = models.CharField(max_length=20, verbose_name="Сокращение")
     lesson_kind = models.CharField(
         max_length=10, choices=LESSON_KINDS, verbose_name="Вид задания")
