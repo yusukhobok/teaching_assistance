@@ -4,15 +4,15 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 class Semester(models.Model):
     ACADEMIC_YEARS = (
-        ('2016/2017', '2016/2017'),
-        ('2017/2018', '2017/2018'),
-        ('2018/2019', '2018/2019'),
-        ('2019/2020', '2019/2020'),
-        ('2020/2021', '2020/2021'),
-        ('2021/2022', '2021/2022'),
-        ('2022/2023', '2022/2023'),
+        ("2016/2017", "2016/2017"),
+        ("2017/2018", "2017/2018"),
+        ("2018/2019", "2018/2019"),
+        ("2019/2020", "2019/2020"),
+        ("2020/2021", "2020/2021"),
+        ("2021/2022", "2021/2022"),
+        ("2022/2023", "2022/2023"),
     )
-    SEASONS = ((1, 'Осенний семестр'), (2, 'Весенний семестр'))
+    SEASONS = ((1, "Осенний семестр"), (2, "Весенний семестр"))
     academic_year = models.CharField(
         max_length=9, choices=ACADEMIC_YEARS, verbose_name="Учебный год")
     season = models.SmallIntegerField(
@@ -22,13 +22,13 @@ class Semester(models.Model):
         ordering = ["academic_year", "season"]
         constraints = [
             models.UniqueConstraint(
-                fields=['academic_year', 'season'], name='unique semester'),
+                fields=["academic_year", "season"], name="unique semester"),
         ]
         verbose_name = "Семестр"
         verbose_name_plural = "Семестры"
 
     def __str__(self):
-        return f"{self.academic_year} уч. г.; {self.season}-й семестр"
+        return f"{self.academic_year} уч. г.; {self.season}-й сем."
 
 
 class Student(models.Model):
@@ -49,7 +49,7 @@ class Student(models.Model):
         ordering = ["last_name", "first_name", "middle_name", "grade_book_number"]
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'grade_book_number'], name='unique student'),
+                fields=["last_name", "first_name", "middle_name", "grade_book_number"], name="unique student"),
         ]
         verbose_name = "Студент"
         verbose_name_plural = "Студенты"
@@ -70,26 +70,26 @@ class Group(models.Model):
     group_number = models.CharField(max_length=10, verbose_name="Номер группы")
     course_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(6)], verbose_name="Курс")
-    semester = models.ForeignKey('Semester', on_delete=models.CASCADE)
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
     head_student = models.ForeignKey(
-        'Student', on_delete=models.CASCADE, null=True)
+        "Student", on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ["semester", "group_number"]
         constraints = [
             models.UniqueConstraint(
-                fields=['group_number', 'semester'], name='unique group'),
+                fields=["group_number", "semester"], name="unique group"),
         ]
-        verbose_name = "Семестр"
-        verbose_name_plural = "Семестры"
+        verbose_name = "Группа"
+        verbose_name_plural = "Группы"
 
     def __str__(self):
-        return f"группа {self.group_number} ({self.semester})"
+        return f"гр. {self.group_number} ({self.semester})"
 
 
 class StudyingStudent(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    group = models.ForeignKey('Group', on_delete=models.CASCADE)
+    student = models.ForeignKey("Student", on_delete=models.CASCADE)
+    group = models.ForeignKey("Group", on_delete=models.CASCADE)
     subgroup_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(2)], verbose_name="Номер подгруппы", default=1)
     discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
@@ -106,13 +106,13 @@ class Discipline(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название")
     short_name = models.CharField(
         max_length=20, verbose_name="Сокращенное название")
-    semester = models.ForeignKey('Semester', on_delete=models.CASCADE)
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
 
     class Meta:
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'semester'], name='unique discipline'),
+                fields=["name", "semester"], name="unique discipline"),
         ]
         verbose_name = "Дисциплина"
         verbose_name_plural = "Дисциплины"
@@ -133,7 +133,7 @@ class Task(models.Model):
                   ("ALLOW", "Допуск"),
                   ("ZACHET", "Зачет"),
                   ("EXAM", "Экзамен"))
-    discipline = models.ForeignKey('Discipline', on_delete=models.CASCADE)
+    discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     deadline = models.DateField(verbose_name="Дедлайн")
     topic = models.CharField(max_length=100, verbose_name="Тема")
     abbreviation = models.CharField(max_length=20, verbose_name="Сокращение")
@@ -160,8 +160,8 @@ class TaskInGroup(models.Model):
 
     class Meta:
         ordering = ["task", "group", "subgroup_number"]
-        verbose_name = "Задание"
-        verbose_name_plural = "Задания"
+        verbose_name = "Задание в группе"
+        verbose_name_plural = "Задания в группах"
 
     def __str__(self):
         return f"{self.task} - {self.group} ({self.subgroup_number})"
@@ -175,7 +175,7 @@ class Lesson(models.Model):
         ("CONS", "Консультация"),
         ("EXAM", "Экзамен")
     )
-    discipline = models.ForeignKey('Discipline', on_delete=models.CASCADE)
+    discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     date_plan = models.DateField(verbose_name="Дата (план)")
     date_fact = models.DateField(verbose_name="Дата (факт)")
     topic = models.CharField(max_length=100, verbose_name="Тема")
@@ -203,8 +203,8 @@ class LessonInGroup(models.Model):
 
     class Meta:
         ordering = ["lesson", "group", "subgroup_number"]
-        verbose_name = "Задание"
-        verbose_name_plural = "Задания"
+        verbose_name = "Занятие в группе"
+        verbose_name_plural = "Занятия в группах"
 
     def __str__(self):
         return f"{self.lesson} - {self.group} ({self.subgroup_number})"
@@ -256,7 +256,7 @@ class Progress(models.Model):
 
 
 class ControlPoint(models.Model):
-    discipline = models.ForeignKey('Discipline', on_delete=models.CASCADE)
+    discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     date = models.DateField(verbose_name="Дата")
     max_score = models.FloatField(validators=[MinValueValidator(
         0), ], verbose_name="Максимальный рейтинг")
@@ -265,26 +265,26 @@ class ControlPoint(models.Model):
         ordering = ["date"]
         constraints = [
             models.UniqueConstraint(
-                fields=['discipline', 'date'], name='unique control point'),
+                fields=["discipline", "date"], name="unique control point"),
         ]
         verbose_name = "Контрольная точка"
         verbose_name_plural = "Контрольные точки"
 
     def __str__(self):
-        return f"{self.date} - {self.max_score}"
+        return f"{self.date} ({self.discipline})"
 
 
 class Rating(models.Model):
     studying_student = models.ForeignKey(
-        'StudyingStudent', on_delete=models.CASCADE)
+        "StudyingStudent", on_delete=models.CASCADE)
     control_point = models.ForeignKey(
-        'ControlPoint', on_delete=models.CASCADE)
+        "ControlPoint", on_delete=models.CASCADE)
     score = models.FloatField(validators=[MinValueValidator(
         0), ], verbose_name="Рейтинг")
 
     class Meta:
         verbose_name = "Рейтинг"
-        verbose_name = "Рейтинг"
+        verbose_name_plural = "Рейтинг"
 
     def __str__(self):
         return f"{self.studying_student} ::: {self.control_point}"      
