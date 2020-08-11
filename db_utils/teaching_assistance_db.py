@@ -79,8 +79,8 @@ class db():
         db.apply_to_db(SQL(
             f"INSERT INTO {table_name} ({template_fields}) VALUES ({template_values})"), values)
 
-        for row in db.select_iterator(SQL(f"SELECT * FROM {table_name} ")):
-            print(row)
+        # for row in db.select_iterator(SQL(f"SELECT * FROM {table_name} ")):
+        #     print(row)
 
         res = db.select_one_from_db(
             SQL(f"SELECT id FROM {table_name} WHERE {template_fields_values}"))

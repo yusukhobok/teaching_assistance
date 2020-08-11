@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 from typing import Tuple, Dict, Sequence
 
-from .teaching_assistance_db import db
+from teaching_assistance_db import db
 
 
 class actions():
@@ -72,6 +72,7 @@ class actions():
     @staticmethod
     def import_students_from_CSV(filename: str, group_id: int, discipline_id: int):
         students_data = pd.read_csv(filename, sep=';', header=0)
+        students_data = students_data.dropna(how='all')
         students_data.fillna('', inplace=True)
         FIO = tuple(students_data["name"].apply(
             lambda value: value.split(" ")))
@@ -79,10 +80,10 @@ class actions():
         students_data["last_name"] = FIO[0]
         students_data["first_name"] = FIO[1]
         students_data["middle_name"] = FIO[2]
-        print(students_data)
+        # print(students_data)
 
         def add_student(row):
-            student_id = insert_student(row['last_name'], row['first_name'], row['middle_name'], row['grade_book_number'],
+            student_id = actions.insert_student(row['last_name'], row['first_name'], row['middle_name'], row['grade_book_number'],
                                         row['email'], row['phone'], row['profile'], row['comments'])
             db.insert_record('journal_studyingstudent',
                              {
@@ -98,7 +99,7 @@ class actions():
         TASK_KINDS = ("LB", "PR", "KONTR", "TEST", "RGR", "KR",
                       "KP", "SECTION", "ALLOW", "ZACHET", "EXAM")
         if task_kind not in TASK_KINDS:
-            raise ValueError("Task kind is incorrect")
+            raise ValueError(f"Task kind {task_kind} is incorrect")
         task_id = db.insert_record('journal_task',
                                    {
                                        "discipline_id": discipline_id,
@@ -114,13 +115,14 @@ class actions():
     @staticmethod
     def import_tasks_from_CSV(filename: str, discipline_id: int, groups_and_subgroups: Tuple[Tuple[int, int]]):
         tasks_data = pd.read_csv(filename, sep=';', header=0)
+        tasks_data = tasks_data.dropna(how='all')
         tasks_data.fillna('', inplace=True)
         tasks_data["deadline"] = pd.to_datetime(
             tasks_data['deadline'], format='%d.%m.%Y')
-        print(tasks_data)
+        # print(tasks_data)
 
         def add_task(row):
-            task_id = insert_task(row['deadline'], row['topic'], row['abbreviation'],
+            task_id = actions.insert_task(row['deadline'], row['topic'], row['abbreviation'],
                                   row['task_kind'], row['comments'], row['task_coef'], discipline_id)
             for group_id, subgroup_number in groups_and_subgroups:
                 db.insert_record('journal_taskingroup',
@@ -133,9 +135,9 @@ class actions():
 
     @staticmethod
     def insert_lesson(date_plan: datetime.date, topic: str, abbreviation: str, lesson_kind: str, comments: str, discipline_id: int, lesson_coef: int):
-        TASK_LESSONS = ("LK", "PR", "LR", "CONS", "EXAM")
-        if lesson_kind not in TASK_LESSONS:
-            raise ValueError("Lesson kind is incorrect")
+        LESSON_KINDS = ("LK", "PR", "LB", "CONS", "EXAM")
+        if lesson_kind not in LESSON_KINDS:
+            raise ValueError(f"Lesson kind {lesson_kind} is incorrect")
         lesson_id = db.insert_record('journal_lesson',
                                      {
                                          "discipline_id": discipline_id,
@@ -152,13 +154,14 @@ class actions():
     @staticmethod
     def import_lessons_from_CSV(filename: str, discipline_id: int, groups_and_subgroups: Tuple[Tuple[int, int]], lesson_coef: int):
         lessons_data = pd.read_csv(filename, sep=';', header=0)
+        lessons_data = lessons_data.dropna(how='all')
         lessons_data.fillna('', inplace=True)
         lessons_data["date_plan"] = pd.to_datetime(
             lessons_data['date_plan'], format='%d.%m.%Y')
-        print(lessons_data)
+        # print(lessons_data)
 
         def add_lesson(row):
-            lesson_id = insert_lesson(row['date_plan'], row['topic'], row['abbreviation'],
+            lesson_id = actions.insert_lesson(row['date_plan'], row['topic'], row['abbreviation'],
                                       row['lesson_kind'], row['comments'], discipline_id, lesson_coef=1)
             for group_id, subgroup_number in groups_and_subgroups:
                 db.insert_record('journal_lessoningroup',
@@ -182,13 +185,14 @@ class actions():
     @staticmethod
     def import_control_points_from_CSV(filename: str, discipline_id: int):
         control_points_data = pd.read_csv(filename, sep=';', header=0)
+        control_points_data = control_points_data.dropna(how='all')
         control_points_data.fillna('', inplace=True)
         control_points_data["date"] = pd.to_datetime(
             control_points_data['date'], format='%d.%m.%Y')
-        print(control_points_data)
+        # print(control_points_data)
 
         def add_control_point(row):
-            insert_control_point(row['date'], row['max_score'], discipline_id)
+            actions.insert_control_point(row['date'], row['max_score'], discipline_id)
         control_points_data.apply(add_control_point, axis=1)
 
     @staticmethod

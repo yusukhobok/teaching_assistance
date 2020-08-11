@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>My test page</title>
+  </head>
+  <body>
+  <ul>
+    {% for student in students_list%}
+        <li>{{student.full_name}}</li>
+    {% endfor %}
+    </ul>
+  </body>
+</html>
