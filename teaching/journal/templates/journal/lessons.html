@@ -1,0 +1,96 @@
+{% extends "journal/base.html" %}
+
+{% block link %} action="{% url "journal:lessons" %}" {% endblock %}
+
+
+{% block working_area %}
+    <script>
+        prepare = (cell) => {
+            const oldValue = cell._cell.oldValue;
+            const newValue = cell._cell.value;
+            const position = table.getRowPosition(cell._cell.row, false);
+            const formData = new FormData();
+            formData.append('oldValue', oldValue);
+            formData.append('newValue', newValue);
+            formData.append('position', position);
+            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            const headers = {"X-CSRFToken": csrftoken}
+            const body = formData
+            return {headers, body}
+        }
+
+        let tabledata = [
+            {% for lg in lessons_in_group %}
+                {
+                    num: {{ forloop.counter }},
+                    date_plan: "{{ lg.lesson.date_plan }}",
+                    date_fact: "{{ lg.lesson.date_fact }}",
+                    topic: "{{ lg.lesson.topic }}",
+                    abbreviation: "{{ lg.lesson.abbreviation }}",
+                    lesson_kind: "{{ lg.lesson.lesson_kind }}",
+                    comments: "{{ lg.lesson.comments }}",
+                    subgroup_number: "{{ lg.subgroup_number }}",
+                },
+            {% endfor %}
+        ];
+
+        let table = new Tabulator("#example-table", {
+            data: tabledata,
+            layout: "fitData",
+            columns: [
+                {title: "№", field: "num", sorter: "number",},
+                {
+                    title: "Дата (план)", field: "date_plan", sorter: "date", editor: false,
+                    sorterParams: {format: "YYYY-MM-DD", alignEmptyValues: "top",}
+                },
+                {
+                    title: "Дата (факт)", field: "date_fact", sorter: "date", editor: true,
+                    sorterParams: {format: "YYYY-MM-DD", alignEmptyValues: "top",},
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Тема", field: "topic", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Сокращение", field: "abbreviation", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Вид задания", field: "lesson_kind", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Комментарии", field: "comments", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Коэффициент за занятие", field: "lesson_coef", sorter: "number", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+                },
+                {
+                    title: "Номер подгруппы", field: "subgroup_number", sorter: "number", formatter: "link", editor: true,
+                    cellEdited: async function (cell) {
+
+                    },
+
+                },
+            ],
+        });
+
+
+    </script>
+
+{% endblock %}

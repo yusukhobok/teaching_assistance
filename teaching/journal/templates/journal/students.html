@@ -3,15 +3,29 @@
 {% block link %} action="{% url "journal:students" %}" {% endblock %}
 
 {% block working_area %}
-
     <script>
-        var tabledata = [
+        prepare = (cell) => {
+            const oldValue = cell._cell.oldValue;
+            const newValue = cell._cell.value;
+            const position = table.getRowPosition(cell._cell.row, false);
+            const formData = new FormData();
+            formData.append('oldValue', oldValue);
+            formData.append('newValue', newValue);
+            formData.append('position', position);
+            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            const headers = {"X-CSRFToken": csrftoken}
+            const body = formData
+            return {headers, body}
+        }
+
+        let tabledata = [
             {% for ss in studying_students %}
                 {
                     num: {{ forloop.counter }},
                     first_name: "{{ ss.student.first_name }}",
                     middle_name: "{{ ss.student.middle_name }}",
                     last_name: "{{ ss.student.last_name }}",
+                    last_name_with_stress: "{{ ss.student.last_name_with_stress }}",
                     grade_book_number: "{{ ss.student.grade_book_number }}",
                     email: "{{ ss.student.email }}",
                     phone: "{{ ss.student.phone }}",
@@ -22,36 +36,115 @@
             {% endfor %}
         ];
 
-        var table = new Tabulator("#example-table", {
+        let table = new Tabulator("#example-table", {
             data: tabledata,
             layout: "fitData",
             columns: [
-                {title: "№", field: "num", sorter: "number"},
-                {title: "Фамилия", field: "last_name", sorter: "string", editor: true},
-                {title: "Имя", field: "first_name", sorter: "string", editor: true},
-                {title: "Отчество", field: "middle_name", sorter: "string", editor: true},
-                {title: "Номер зачетной книжки", field: "grade_book_number", sorter: "string", editor: true},
-                {title: "E-mail", field: "email", sorter: "string", editor: true},
-                {title: "Телефон", field: "phone", sorter: "string", editor: true},
-                {title: "Ссылка", field: "profile", sorter: "string", formatter: "link", editor: true},
-                {title: "Комментарии", field: "comments", sorter: "string", editor: true},
-                {title: "Отчислен", field: "expelled", sorter: "boolean", formatter: "tickCross", editor: true},
+                {title: "№", field: "num", sorter: "number",},
+                {
+                    title: "Фамилия", field: "last_name", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "last_name" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Имя", field: "first_name", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "first_name" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Отчество", field: "middle_name", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "middle_name" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "С ударением", field: "last_name_with_stress", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "last_name_with_stress" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Номер зачетной книжки", field: "grade_book_number", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "grade_book_number" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "E-mail", field: "email", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "email" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Телефон", field: "phone", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "phone" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Ссылка", field: "profile", sorter: "string", formatter: "link", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "profile" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Комментарии", field: "comments", sorter: "string", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "comments" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Отчислен", field: "expelled", sorter: "boolean", formatter: "tickCross", editor: true,
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_students" "expelled" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
             ],
         });
 
 
     </script>
-
-
-    {#    {% for ss in studying_students %}#}
-    {#        <p>#}
-    {#            {{ ss.student.first_name }};#}
-    {#            {{ ss.student.middle_name }};#}
-    {#            {{ ss.student.last_name }};#}
-    {#            {{ ss.student.grade_book_number }};#}
-    {#            {{ ss.subgroup_number }};#}
-    {##}
-    {#        </p>#}
-    {#    {% endfor %}#}
 
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.forms.models import model_to_dict
+
 
 class Semester(models.Model):
     ACADEMIC_YEARS = (
@@ -36,15 +36,15 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100, verbose_name="Имя")
     middle_name = models.CharField(max_length=100, verbose_name="Отчество")
     last_name = models.CharField(max_length=100, verbose_name="Фамилия")
-    last_name_with_stress = models.CharField(max_length=100, verbose_name="Фамилия с ударением", default="")
+    last_name_with_stress = models.CharField(max_length=100, verbose_name="Фамилия с ударением", null=True)
     grade_book_number = models.CharField(
         max_length=50, verbose_name="Номер зачетной книжки")
     email = models.EmailField(verbose_name="E-mail", blank=True, null=True)
-    phone = models.CharField(max_length=50, verbose_name="Телефон")
+    phone = models.CharField(max_length=50, verbose_name="Телефон", null=True)
     profile = models.URLField(
         verbose_name="Ссылка на профиль", blank=True, null=True)
     photo = models.ImageField(verbose_name="Фото", blank=True, null=True)
-    comments = models.TextField(verbose_name="Комментарии")
+    comments = models.TextField(verbose_name="Комментарии", null=True)
     expelled = models.BooleanField(verbose_name="Отчислен", default=False)
 
     class Meta:
