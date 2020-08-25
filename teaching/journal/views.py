@@ -3,24 +3,23 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.template import loader
 from django.views import generic
+from django.core import serializers
 
-from .models import Semester, Student
+from .models import Semester, Student, Group, StudyingStudent, Discipline, Task, TaskInGroup, Lesson, LessonInGroup, \
+    Attendance, Progress, ControlPoint, Rating
+from .commondata import CommonData
 
 
 def index(request):
-    # template = loader.get_template("journal/index.html")
-    # return HttpResponse(template.render())
-    context = {}
-    return render(request, "journal/index.html", context)
-
-def semester(request, semester_id):
-    semester = get_object_or_404(Semester, pk=semester_id)
-    return render(request, "journal/semester.html", {"semester": semester})
+    CommonData.prepare_data(request.POST)
+    context = {"common_data": CommonData.data}
+    return render(request, "journal/base.html", context=context)
 
 
-class StudentsView(generic.ListView):
-    template_name = "journal/students.html"
-    context_object_name = "students_list"
+def students_page(request):
+    CommonData.prepare_data(request.POST)
+    studying_students = StudyingStudent.objects.filter(group=CommonData.data["current_group"],
+                                              discipline=CommonData.data["current_discipline"])
 
-    def get_queryset(self):
-        return Student.objects.all()
+    context = {"common_data": CommonData.data, "studying_students": studying_students}
+    return render(request, "journal/students.html", context=context)

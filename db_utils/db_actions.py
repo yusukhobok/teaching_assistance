@@ -65,7 +65,7 @@ class actions():
                                           "phone": phone,
                                           "profile": profile,
                                           "comments": comments,
-                                          "expelled": expelled
+                                          "expelled": expelled,
                                       })
         return student_id
 
@@ -91,6 +91,7 @@ class actions():
                                  "group_id": group_id,
                                  "subgroup_number": row['subgroup_number'],
                                  "discipline_id": discipline_id,
+                                 "is_head": False,
                              })
         students_data.apply(add_student, axis=1)
 

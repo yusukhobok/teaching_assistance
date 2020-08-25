@@ -2,8 +2,8 @@ from django.urls import path
 
 from . import views
 
+app_name = "journal"
 urlpatterns = [
     path("", views.index, name="index"),
-    path("<int:semester_id>/", views.semester, name="semester"),
-    path("students/", views.StudentsView.as_view(), name="students")
+    path("students/", views.students_page, name="students"),
 ]

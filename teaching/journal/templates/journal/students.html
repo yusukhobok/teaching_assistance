@@ -1,14 +1,57 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>My test page</title>
-  </head>
-  <body>
-  <ul>
-    {% for student in students_list%}
-        <li>{{student.full_name}}</li>
-    {% endfor %}
-    </ul>
-  </body>
-</html>
+{% extends "journal/base.html" %}
+
+{% block link %} action="{% url "journal:students" %}" {% endblock %}
+
+{% block working_area %}
+
+    <script>
+        var tabledata = [
+            {% for ss in studying_students %}
+                {
+                    num: {{ forloop.counter }},
+                    first_name: "{{ ss.student.first_name }}",
+                    middle_name: "{{ ss.student.middle_name }}",
+                    last_name: "{{ ss.student.last_name }}",
+                    grade_book_number: "{{ ss.student.grade_book_number }}",
+                    email: "{{ ss.student.email }}",
+                    phone: "{{ ss.student.phone }}",
+                    profile: "{{ ss.student.profile }}",
+                    comments: "{{ ss.student.comments }}",
+                    expelled: {{ ss.student.expelled|lower }},
+                },
+            {% endfor %}
+        ];
+
+        var table = new Tabulator("#example-table", {
+            data: tabledata,
+            layout: "fitData",
+            columns: [
+                {title: "№", field: "num", sorter: "number"},
+                {title: "Фамилия", field: "last_name", sorter: "string", editor: true},
+                {title: "Имя", field: "first_name", sorter: "string", editor: true},
+                {title: "Отчество", field: "middle_name", sorter: "string", editor: true},
+                {title: "Номер зачетной книжки", field: "grade_book_number", sorter: "string", editor: true},
+                {title: "E-mail", field: "email", sorter: "string", editor: true},
+                {title: "Телефон", field: "phone", sorter: "string", editor: true},
+                {title: "Ссылка", field: "profile", sorter: "string", formatter: "link", editor: true},
+                {title: "Комментарии", field: "comments", sorter: "string", editor: true},
+                {title: "Отчислен", field: "expelled", sorter: "boolean", formatter: "tickCross", editor: true},
+            ],
+        });
+
+
+    </script>
+
+
+    {#    {% for ss in studying_students %}#}
+    {#        <p>#}
+    {#            {{ ss.student.first_name }};#}
+    {#            {{ ss.student.middle_name }};#}
+    {#            {{ ss.student.last_name }};#}
+    {#            {{ ss.student.grade_book_number }};#}
+    {#            {{ ss.subgroup_number }};#}
+    {##}
+    {#        </p>#}
+    {#    {% endfor %}#}
+
+{% endblock %}

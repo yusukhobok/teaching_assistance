@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.forms.models import model_to_dict
 
 class Semester(models.Model):
     ACADEMIC_YEARS = (
@@ -17,6 +17,7 @@ class Semester(models.Model):
         max_length=9, choices=ACADEMIC_YEARS, verbose_name="Учебный год")
     season = models.SmallIntegerField(
         choices=SEASONS, verbose_name="Вид семестра")
+    is_current = models.BooleanField(verbose_name="Текущий", default=False)
 
     class Meta:
         ordering = ["academic_year", "season"]
@@ -35,6 +36,7 @@ class Student(models.Model):
     first_name = models.CharField(max_length=100, verbose_name="Имя")
     middle_name = models.CharField(max_length=100, verbose_name="Отчество")
     last_name = models.CharField(max_length=100, verbose_name="Фамилия")
+    last_name_with_stress = models.CharField(max_length=100, verbose_name="Фамилия с ударением", default="")
     grade_book_number = models.CharField(
         max_length=50, verbose_name="Номер зачетной книжки")
     email = models.EmailField(verbose_name="E-mail", blank=True, null=True)
@@ -65,13 +67,17 @@ class Student(models.Model):
     def __str__(self):
         return self.surname_and_initials if not self.expelled else f"{self.surname_and_initials} (отчислен)"
 
+    # def natural_key(self):
+    #     model_dict = model_to_dict(self, fields=[field.name for field in self._meta.fields if field.name != "photo"])
+    #     return model_dict
+
 
 class Group(models.Model):
     group_number = models.CharField(max_length=10, verbose_name="Номер группы")
     course_number = models.SmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(6)], verbose_name="Курс")
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
-
+    is_current = models.BooleanField(verbose_name="Текущая", default=False)
 
     class Meta:
         ordering = ["semester", "group_number"]
@@ -109,6 +115,7 @@ class Discipline(models.Model):
     short_name = models.CharField(
         max_length=20, verbose_name="Сокращенное название")
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
+    is_current = models.BooleanField(verbose_name="Текущая", default=False)
 
     class Meta:
         ordering = ["name"]
@@ -289,4 +296,4 @@ class Rating(models.Model):
         verbose_name_plural = "Рейтинг"
 
     def __str__(self):
-        return f"{self.studying_student} ::: {self.control_point}"      
+        return f"{self.studying_student} ::: {self.control_point}"
