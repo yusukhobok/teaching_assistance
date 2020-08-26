@@ -18,6 +18,9 @@ class Data():
     studying_students = None
     lessons_in_group = None
     lessons = None
+    tasks_in_group = None
+    tasks = None
+    attendance = None
 
     @classmethod
     def set_today(cls):
@@ -159,3 +162,31 @@ class Data():
         for lg in cls.lessons_in_group:
             if lg.lesson not in cls.lessons:
                 cls.lessons.append(lg.lesson)
+
+    @classmethod
+    def init_tasks_in_group(cls):
+        cls.tasks_in_group = TaskInGroup.objects.filter(group=cls.common_data["current_group"],
+                                                        task__discipline=cls.common_data["current_discipline"])
+
+        #TODO:можно ли это решить внутренними средствами Django? SQL?
+        cls.tasks = []
+        for tg in cls.tasks_in_group:
+            if tg.task not in cls.tasks:
+                cls.tasks.append(tg.task)
+
+    @classmethod
+    def init_attendance(cls):
+        cls.init_lessons_in_group()
+        cls.init_studying_students()
+
+        cls.attendance = list()
+        for ss in cls.studying_students:
+            students_data = dict()
+            for lg in cls.lessons_in_group:
+                if ss.subgroup_number == lg.subgroup_number:
+                    att = Attendance.objects.filter(studying_student=ss, lesson_in_group=lg)[0]
+                    students_data[f"{lg.lesson.abbreviation} ({lg.lesson.id})"] = f"{att.mark} ({att.grade})"
+                    # students_data[f"lesson_{lg.lesson.id}"] = f"{att.mark} ({att.grade})"
+            cls.attendance.append(students_data)
+        # for el in cls.attendance:
+        #     print(el)

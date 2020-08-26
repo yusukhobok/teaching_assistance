@@ -1,22 +1,21 @@
 {% extends "journal/base.html" %}
 
-{% block link %} action="{% url "journal:lessons" %}" {% endblock %}
+{% block link %} action="{% url "journal:tasks" %}" {% endblock %}
 
 {% block working_area %}
     <script>
-        document.getElementById("nav-lessons").classList.add("active")
+        document.getElementById("nav-tasks").classList.add("active")
 
         let tabledata = [
-            {% for lesson in lessons %}
+            {% for task in tasks %}
                 {
                     num: {{ forloop.counter }},
-                    date_plan: "{{ lesson.date_plan|date:"Y-m-d" }}",
-                    date_fact: "{{ lesson.date_fact|date:"Y-m-d" }}",
-                    topic: "{{ lesson.topic }}",
-                    abbreviation: "{{ lesson.abbreviation }}",
-                    lesson_kind: "{{ lesson.lesson_kind }}",
-                    comments: "{{ lesson.comments }}",
-                    lesson_coef: "{{ lesson.lesson_coef }}",
+                    deadline: "{{ task.deadline|date:"Y-m-d" }}",
+                    topic: "{{ task.topic }}",
+                    abbreviation: "{{ task.abbreviation }}",
+                    task_kind: "{{ task.task_kind }}",
+                    comments: "{{ task.comments }}",
+                    task_coef: "{{ task.task_coef }}",
                 },
             {% endfor %}
         ];
@@ -24,35 +23,24 @@
         let table = new Tabulator("#example-table", {
             data: tabledata,
             layout: "fitData",
-            groupBy: "lesson_kind",
+            groupBy: "task_kind",
             columns: [
                 //{title: "№", field: "num", sorter: "number",},
                 /*{
-                    title: "Вид", field: "lesson_kind", sorter: "string", editor: false, hozAlign: "center",
+                    title: "Вид", field: "task_kind", sorter: "string", editor: false, hozAlign: "center",
                 },*/
                 {
                     title: "Сокр.", field: "abbreviation", sorter: "string", editor: true, hozAlign: "center",
                     cellEdited: async function (cell) {
                         res = prepare(cell)
-                        let response = await fetch("{% url "journal:change_lessons" "abbreviation" %}", {
+                        let response = await fetch("{% url "journal:change_tasks" "abbreviation" %}", {
                             method: "POST", credentials: 'include', headers: res["headers"],
                             body: res["body"]
                         })
                     },
                 },
                 {
-                    title: "Дата (план)", field: "date_plan", sorter: "date", editor: false, hozAlign: "center",
-                    sorterParams: {
-                        format: "YYYY-MM-DD", alignEmptyValues: "top",
-                        formatter: "datetime", formatterParams: {
-                            inputFormat: "YYYY-MM-DD",
-                            outputFormat: "YYYY-MM-DD",
-                            invalidPlaceholder: "(invalid date)"
-                        }
-                    }
-                },
-                {
-                    title: "Дата (факт)", field: "date_fact", sorter: "date", editor: dateEditor, hozAlign: "center",
+                    title: "Дедлайн", field: "deadline", sorter: "date", editor: dateEditor, hozAlign: "center",
                     sorterParams: {
                         format: "YYYY-MM-DD", alignEmptyValues: "top",
                         formatter: "datetime", formatterParams: {
@@ -63,7 +51,7 @@
                     },
                     cellEdited: async function (cell) {
                         res = prepare(cell)
-                        let response = await fetch("{% url "journal:change_lessons" "date_fact" %}", {
+                        let response = await fetch("{% url "journal:change_tasks" "deadline" %}", {
                             method: "POST", credentials: 'include', headers: res["headers"],
                             body: res["body"]
                         })
@@ -73,7 +61,7 @@
                     title: "Тема", field: "topic", sorter: "string", editor: true,
                     cellEdited: async function (cell) {
                         res = prepare(cell)
-                        let response = await fetch("{% url "journal:change_lessons" "topic" %}", {
+                        let response = await fetch("{% url "journal:change_tasks" "topic" %}", {
                             method: "POST", credentials: 'include', headers: res["headers"],
                             body: res["body"]
                         })
@@ -83,17 +71,17 @@
                     title: "Комментарии", field: "comments", sorter: "string", editor: true,
                     cellEdited: async function (cell) {
                         res = prepare(cell)
-                        let response = await fetch("{% url "journal:change_lessons" "comments" %}", {
+                        let response = await fetch("{% url "journal:change_tasks" "comments" %}", {
                             method: "POST", credentials: 'include', headers: res["headers"],
                             body: res["body"]
                         })
                     },
                 },
                 {
-                    title: "Коэф.", field: "lesson_coef", sorter: "number", editor: true, hozAlign: "center",
+                    title: "Коэф.", field: "task_coef", sorter: "number", editor: true, hozAlign: "center",
                     cellEdited: async function (cell) {
                         res = prepare(cell)
-                        let response = await fetch("{% url "journal:change_lessons" "lesson_coef" %}", {
+                        let response = await fetch("{% url "journal:change_tasks" "task_coef" %}", {
                             method: "POST", credentials: 'include', headers: res["headers"],
                             body: res["body"]
                         })

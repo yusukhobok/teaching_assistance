@@ -153,7 +153,7 @@ class Task(models.Model):
         validators=[MinValueValidator(0), ], verbose_name="Коэффициент за задание", default=1.0)
 
     class Meta:
-        ordering = ["discipline", "deadline"]
+        ordering = ["discipline", "task_kind", "deadline"]
         verbose_name = "Задание"
         verbose_name_plural = "Задания"
 
@@ -196,7 +196,7 @@ class Lesson(models.Model):
         validators=[MinValueValidator(0), ], verbose_name="Коэффициент за занятие", default=1.0)
 
     class Meta:
-        ordering = ["discipline", "date_plan"]
+        ordering = ["discipline", "lesson_kind", "date_plan"]
         verbose_name = "Занятие"
         verbose_name_plural = "Занятия"
 
