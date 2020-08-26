@@ -90,3 +90,24 @@ def attendance_page(request):
     return render(request, "journal/attendance.html", context=context)
 
 
+def change_attendance(request):
+    newValue = request.POST.get("newValue", None)
+    student_position = request.POST.get("student_position", None)
+    lesson_id = request.POST.get("lesson_id", None)
+    if (newValue is not None) and (student_position is not None) and (lesson_id is not None):
+        student_position = int(student_position)
+        lesson_id = int(lesson_id)
+        student_id = Data.studying_students[student_position].student.id
+        ss = StudyingStudent.objects.filter(student__id=student_id)[0]
+        lg = LessonInGroup.objects.filter(lesson__id=lesson_id, subgroup_number=ss.subgroup_number)[0]
+        attendance = Attendance.objects.filter(studying_student=ss, lesson_in_group=lg)
+        attendance = attendance[0]
+        attendance.mark = newValue
+        attendance.save()
+        return HttpResponse("CHANGE")
+    else:
+        return redirect("journal:attendance")
+
+
+
+

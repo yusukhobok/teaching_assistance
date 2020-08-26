@@ -64,6 +64,14 @@ class Student(models.Model):
     def surname_and_initials(self):
         return f"{self.last_name} {self.first_name[0]}. {self.middle_name[0]}."
 
+    @property
+    def journal_name(self):
+        if (self.last_name_with_stress is None) or (self.last_name_with_stress == ""):
+            journal_last_name = self.last_name
+        else:
+            journal_last_name = self.last_name_with_stress
+        return f"{journal_last_name} {self.first_name}"
+
     def __str__(self):
         return self.surname_and_initials if not self.expelled else f"{self.surname_and_initials} (отчислен)"
 

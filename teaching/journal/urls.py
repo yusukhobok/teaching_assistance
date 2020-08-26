@@ -12,4 +12,6 @@ urlpatterns = [
     path("tasks/", views.tasks_page, name="tasks"),
     path("change_tasks/<str:field>", views.change_tasks, name="change_tasks"),
     path("attendance/", views.attendance_page, name="attendance"),
+    path("change_attendance/", views.change_attendance, name="change_attendance"),
+
 ]

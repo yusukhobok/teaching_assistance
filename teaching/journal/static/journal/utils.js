@@ -10,7 +10,7 @@ let prepare = (cell) => {
     const headers = {"X-CSRFToken": csrftoken}
     const body = formData
     return {headers, body}
-}
+};
 
 let dateEditor = (cell, onRendered, success, cancel, editorParams) => {
     //cell - the cell component for the editable cell

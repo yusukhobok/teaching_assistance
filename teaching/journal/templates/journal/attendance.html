@@ -5,18 +5,34 @@
 {% block working_area %}
     <script>
         document.getElementById("nav-attendance").classList.add("active");
+
+        let prepareAttendance = (cell) => {
+            const newValue = cell._cell.value;
+            const student_position = table.getRowPosition(cell._cell.row, false);
+            const lesson_id = cell.getColumn().getField();
+            const formData = new FormData();
+            formData.append('newValue', newValue);
+            formData.append('student_position', student_position);
+            formData.append('lesson_id', lesson_id);
+            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            const headers = {"X-CSRFToken": csrftoken};
+            const body = formData;
+            return {headers, body};
+        };
+
         let tabledata = []
-        {% for student in studying_students %}
+        {% for ss in studying_students %}
             tabledata.push(
                 {
                     "num": {{ forloop.counter}},
-                    "student": "{{ student.student.last_name }} {{ student.student.first_name }}"
+                    //"student": "{{ ss.student.last_name }} {{ ss.student.first_name }}"
+                    "student": "{{ ss.student.journal_name }}"
                 }
             )
         {%  endfor %}
 
         let table = new Tabulator("#example-table", {
-            height:"85vh",
+            height: "85vh",
             data: tabledata,
             layout: "fitData",
             columns: [
@@ -29,114 +45,62 @@
         {% for row in attendance %}
             curr_row = tabledata[{{ forloop.counter0 }}];
             {% for k,v in row.items %}
-                curr_row["{{ k }}"] = {{ v }};
+                curr_row["{{ k }}"] = "{{ v }}";
             {% endfor %}
         {% endfor %}
 
         {%  for lesson in lessons %}
-            table.addColumn({title: "{{ lesson.abbreviation }}", field:"{{ lesson.abbreviation }} ({{ lesson.id }})"})
+            table.addColumn({
+                title: "{{ lesson.abbreviation }}<br>{{ lesson.date_fact|date:"d.m" }}",
+                field: "{{ lesson.id }}",
+                hozAlign: "center", headerSort: false,
+                //editor: true, editable: (cell) => cell.getValue() !== undefined,
+                formatter: (cell, formatterParams, onRendered) => {
+                    value = cell.getValue();
+                    if (value === undefined)
+                        cell.getElement().style.backgroundColor = "gray";
+                    else if (value === "+") {
+                        cell.getElement().style.color = "green";
+                        cell.getElement().style.fontWeight = "bold";
+                    } else if (value === "н") {
+                        cell.getElement().style.color = "red";
+                        cell.getElement().style.fontWeight = "bold";
+                    } else if (value === "оп") {
+                        cell.getElement().style.color = "purple";
+                        cell.getElement().style.fontWeight = "bold";
+                    } else if (value === "н(у)") {
+                        cell.getElement().style.color = "blue";
+                        cell.getElement().style.fontWeight = "bold";
+                    }
+                    return cell.getValue();
+                },
+                cellClick: async (e, cell) => {
+                    if (!e.ctrlKey) return;
+                    if (cell.getValue() === undefined) return;
+                    switch (cell.getValue()) {
+                        case "":
+                            cell.setValue("+");
+                            break;
+                        case "+":
+                            cell.setValue("н");
+                            break;
+                        case "н":
+                            cell.setValue("оп");
+                            break;
+                        case "оп":
+                            cell.setValue("н(у)");
+                            break;
+                        case "н(у)":
+                            cell.setValue("");
+                            break;
+                    }
+                    res = prepareAttendance(cell);
+                    let response = await fetch("{% url "journal:change_attendance" %}", {
+                        method: "POST", credentials: 'include', headers: res["headers"],
+                        body: res["body"]
+                    });
+                }
+            })
         {%  endfor %}
-
-
-
-        {#column = table.columnManager.columnsByField["num"]#}
-        {#column.updateDefinition({frozen: true});#}
-
-            {#columns: [#}
-            {#{title: "№", field: "num", sorter: "number", hozAlign: "center",},#}
-            {#{#}
-            {#    title: "Фамилия", field: "last_name", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "last_name" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Имя", field: "first_name", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "first_name" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Отчество", field: "middle_name", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "middle_name" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "С ударением", field: "last_name_with_stress", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "last_name_with_stress" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Номер зачетной книжки", field: "grade_book_number", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "grade_book_number" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "E-mail", field: "email", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "email" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Телефон", field: "phone", sorter: "string", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "phone" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Ссылка", field: "profile", sorter: "string", formatter: "link", editor: true,#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "profile" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Комментарии", field: "comments", sorter: "string", editor: true, formatter:"textarea",#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "comments" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Отчислен", field: "expelled", sorter: "boolean", formatter: "tickCross", editor: true,#}
-            {#    hozAlign: "center",#}
-            {#    cellEdited: async function (cell) {#}
-            {#        res = prepare(cell)#}
-            {#        let response = await fetch("{% url "journal:change_students" "expelled" %}", {#}
-            {#            method: "POST", credentials: 'include', headers: res["headers"],#}
-            {#            body: res["body"]#}
-            {#        })#}
-            {#    },#}
-            {#{#}
-            {#    title: "Подгруппа", field: "subgroup_number", sorter: "number", editor: false, hozAlign: "center",#}
-
     </script>
 {% endblock %}

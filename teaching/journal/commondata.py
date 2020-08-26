@@ -3,6 +3,7 @@
 import datetime
 from .models import Semester, Student, Group, StudyingStudent, Discipline, Task, TaskInGroup, Lesson, LessonInGroup, \
     Attendance, Progress, ControlPoint, Rating
+from django.db.models import F
 
 
 class Data():
@@ -157,7 +158,7 @@ class Data():
         cls.lessons_in_group = LessonInGroup.objects.filter(group=cls.common_data["current_group"],
                                                             lesson__discipline=cls.common_data["current_discipline"])
 
-        #TODO:можно ли это решить внутренними средствами Django? SQL?
+        # TODO:можно ли это решить внутренними средствами Django? SQL?
         cls.lessons = []
         for lg in cls.lessons_in_group:
             if lg.lesson not in cls.lessons:
@@ -168,7 +169,7 @@ class Data():
         cls.tasks_in_group = TaskInGroup.objects.filter(group=cls.common_data["current_group"],
                                                         task__discipline=cls.common_data["current_discipline"])
 
-        #TODO:можно ли это решить внутренними средствами Django? SQL?
+        # TODO:можно ли это решить внутренними средствами Django? SQL?
         cls.tasks = []
         for tg in cls.tasks_in_group:
             if tg.task not in cls.tasks:
@@ -179,14 +180,25 @@ class Data():
         cls.init_lessons_in_group()
         cls.init_studying_students()
 
+        attendance = Attendance.objects.filter(studying_student__group=cls.common_data["current_group"],
+                                               studying_student__discipline=cls.common_data["current_discipline"],
+                                               lesson_in_group__group=cls.common_data["current_group"],
+                                               lesson_in_group__lesson__discipline=cls.common_data["current_discipline"],
+                                               studying_student__subgroup_number=F("lesson_in_group__subgroup_number"))
+
         cls.attendance = list()
         for ss in cls.studying_students:
-            students_data = dict()
+            row = dict()
             for lg in cls.lessons_in_group:
                 if ss.subgroup_number == lg.subgroup_number:
-                    att = Attendance.objects.filter(studying_student=ss, lesson_in_group=lg)[0]
-                    students_data[f"{lg.lesson.abbreviation} ({lg.lesson.id})"] = f"{att.mark} ({att.grade})"
-                    # students_data[f"lesson_{lg.lesson.id}"] = f"{att.mark} ({att.grade})"
-            cls.attendance.append(students_data)
-        # for el in cls.attendance:
-        #     print(el)
+                    # att = Attendance.objects.filter(studying_student=ss, lesson_in_group=lg)[0]
+                    row[lg.lesson.id] = ""  # att.mark
+            cls.attendance.append(row)
+
+        studying_students_list = list(cls.studying_students)
+        for record in attendance:
+            ss = record.studying_student
+            student_index = studying_students_list.index(ss)
+            lg = record.lesson_in_group
+            cls.attendance[student_index][lg.lesson.id] = record.mark
+
