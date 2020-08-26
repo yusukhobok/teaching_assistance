@@ -1,22 +1,12 @@
 {% extends "journal/base.html" %}
 
+
+
 {% block link %} action="{% url "journal:students" %}" {% endblock %}
 
 {% block working_area %}
     <script>
-        prepare = (cell) => {
-            const oldValue = cell._cell.oldValue;
-            const newValue = cell._cell.value;
-            const position = table.getRowPosition(cell._cell.row, false);
-            const formData = new FormData();
-            formData.append('oldValue', oldValue);
-            formData.append('newValue', newValue);
-            formData.append('position', position);
-            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-            const headers = {"X-CSRFToken": csrftoken}
-            const body = formData
-            return {headers, body}
-        }
+        document.getElementById("nav-students").classList.add("active")
 
         let tabledata = [
             {% for ss in studying_students %}
@@ -32,15 +22,16 @@
                     profile: "{{ ss.student.profile }}",
                     comments: "{{ ss.student.comments }}",
                     expelled: {{ ss.student.expelled|lower }},
+                    subgroup_number: "{{ ss.subgroup_number }}",
                 },
             {% endfor %}
         ];
 
         let table = new Tabulator("#example-table", {
             data: tabledata,
-            layout: "fitData",
+            layout: "fitColumns",
             columns: [
-                {title: "№", field: "num", sorter: "number",},
+                {title: "№", field: "num", sorter: "number", hozAlign: "center",},
                 {
                     title: "Фамилия", field: "last_name", sorter: "string", editor: true,
                     cellEdited: async function (cell) {
@@ -122,7 +113,7 @@
                     },
                 },
                 {
-                    title: "Комментарии", field: "comments", sorter: "string", editor: true,
+                    title: "Комментарии", field: "comments", sorter: "string", editor: true, formatter:"textarea",
                     cellEdited: async function (cell) {
                         res = prepare(cell)
                         let response = await fetch("{% url "journal:change_students" "comments" %}", {
@@ -133,6 +124,7 @@
                 },
                 {
                     title: "Отчислен", field: "expelled", sorter: "boolean", formatter: "tickCross", editor: true,
+                    hozAlign: "center",
                     cellEdited: async function (cell) {
                         res = prepare(cell)
                         let response = await fetch("{% url "journal:change_students" "expelled" %}", {
@@ -140,6 +132,9 @@
                             body: res["body"]
                         })
                     },
+                },
+                {
+                    title: "Подгруппа", field: "subgroup_number", sorter: "number", editor: false, hozAlign: "center",
                 },
             ],
         });

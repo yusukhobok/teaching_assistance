@@ -5,31 +5,19 @@
 
 {% block working_area %}
     <script>
-        prepare = (cell) => {
-            const oldValue = cell._cell.oldValue;
-            const newValue = cell._cell.value;
-            const position = table.getRowPosition(cell._cell.row, false);
-            const formData = new FormData();
-            formData.append('oldValue', oldValue);
-            formData.append('newValue', newValue);
-            formData.append('position', position);
-            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-            const headers = {"X-CSRFToken": csrftoken}
-            const body = formData
-            return {headers, body}
-        }
+        document.getElementById("nav-lessons").classList.add("active")
 
         let tabledata = [
-            {% for lg in lessons_in_group %}
+            {% for lesson in lessons %}
                 {
                     num: {{ forloop.counter }},
-                    date_plan: "{{ lg.lesson.date_plan }}",
-                    date_fact: "{{ lg.lesson.date_fact }}",
-                    topic: "{{ lg.lesson.topic }}",
-                    abbreviation: "{{ lg.lesson.abbreviation }}",
-                    lesson_kind: "{{ lg.lesson.lesson_kind }}",
-                    comments: "{{ lg.lesson.comments }}",
-                    subgroup_number: "{{ lg.subgroup_number }}",
+                    date_plan: "{{ lesson.date_plan|date:"Y-m-d" }}",
+                    date_fact: "{{ lesson.date_fact|date:"Y-m-d" }}",
+                    topic: "{{ lesson.topic }}",
+                    abbreviation: "{{ lesson.abbreviation }}",
+                    lesson_kind: "{{ lesson.lesson_kind }}",
+                    comments: "{{ lesson.comments }}",
+                    lesson_coef: "{{ lesson.lesson_coef }}",
                 },
             {% endfor %}
         ];
@@ -37,60 +25,86 @@
         let table = new Tabulator("#example-table", {
             data: tabledata,
             layout: "fitData",
+            groupBy: "lesson_kind",
             columns: [
                 {title: "№", field: "num", sorter: "number",},
                 {
-                    title: "Дата (план)", field: "date_plan", sorter: "date", editor: false,
-                    sorterParams: {format: "YYYY-MM-DD", alignEmptyValues: "top",}
+                    title: "Вид", field: "lesson_kind", sorter: "string", editor: false, hozAlign: "center",
                 },
                 {
-                    title: "Дата (факт)", field: "date_fact", sorter: "date", editor: true,
-                    sorterParams: {format: "YYYY-MM-DD", alignEmptyValues: "top",},
+                    title: "Сокр.", field: "abbreviation", sorter: "string", editor: true, hozAlign: "center",
                     cellEdited: async function (cell) {
-
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_lessons" "abbreviation" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
+                    },
+                },
+                {
+                    title: "Дата (план)", field: "date_plan", sorter: "date", editor: false, hozAlign: "center",
+                    sorterParams: {
+                        format: "YYYY-MM-DD", alignEmptyValues: "top",
+                        formatter: "datetime", formatterParams: {
+                            inputFormat: "YYYY-MM-DD",
+                            outputFormat: "YYYY-MM-DD",
+                            invalidPlaceholder: "(invalid date)"
+                        }
+                    }
+                },
+                {
+                    title: "Дата (факт)", field: "date_fact", sorter: "date", editor: dateEditor, hozAlign: "center",
+                    sorterParams: {
+                        format: "YYYY-MM-DD", alignEmptyValues: "top",
+                        formatter: "datetime", formatterParams: {
+                            inputFormat: "YYYY-MM-DD",
+                            outputFormat: "YYYY-MM-DD",
+                            invalidPlaceholder: "(invalid date)"
+                        }
+                    },
+                    cellEdited: async function (cell) {
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_lessons" "date_fact" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
                     },
                 },
                 {
                     title: "Тема", field: "topic", sorter: "string", editor: true,
                     cellEdited: async function (cell) {
-
-                    },
-                },
-                {
-                    title: "Сокращение", field: "abbreviation", sorter: "string", editor: true,
-                    cellEdited: async function (cell) {
-
-                    },
-                },
-                {
-                    title: "Вид задания", field: "lesson_kind", sorter: "string", editor: true,
-                    cellEdited: async function (cell) {
-
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_lessons" "topic" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
                     },
                 },
                 {
                     title: "Комментарии", field: "comments", sorter: "string", editor: true,
                     cellEdited: async function (cell) {
-
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_lessons" "comments" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
                     },
                 },
                 {
-                    title: "Коэффициент за занятие", field: "lesson_coef", sorter: "number", editor: true,
+                    title: "Коэф.", field: "lesson_coef", sorter: "number", editor: true, hozAlign: "center",
                     cellEdited: async function (cell) {
-
+                        res = prepare(cell)
+                        let response = await fetch("{% url "journal:change_lessons" "lesson_coef" %}", {
+                            method: "POST", credentials: 'include', headers: res["headers"],
+                            body: res["body"]
+                        })
                     },
-                },
-                {
-                    title: "Номер подгруппы", field: "subgroup_number", sorter: "number", formatter: "link", editor: true,
-                    cellEdited: async function (cell) {
-
-                    },
-
                 },
             ],
         });
-
-
     </script>
 
+
+
 {% endblock %}
+

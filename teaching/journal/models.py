@@ -29,7 +29,7 @@ class Semester(models.Model):
         verbose_name_plural = "Семестры"
 
     def __str__(self):
-        return f"{self.academic_year} уч. г.; {self.season}-й сем."
+        return f"{self.academic_year} ({self.season})"
 
 
 class Student(models.Model):
