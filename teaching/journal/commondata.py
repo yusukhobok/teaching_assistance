@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import math
 from .models import Semester, Student, Group, StudyingStudent, Discipline, Task, TaskInGroup, Lesson, LessonInGroup, \
     Attendance, Progress, ControlPoint, Rating
 from django.db.models import F
+
+MAX_GRADE = 10
 
 
 class Data():
@@ -23,6 +26,8 @@ class Data():
     tasks = None
     attendance = None
     progress = None
+    control_points = None
+    rating = None
 
     @classmethod
     def set_today(cls):
@@ -158,7 +163,6 @@ class Data():
     def init_lessons_in_group(cls):
         cls.lessons_in_group = LessonInGroup.objects.filter(group=cls.common_data["current_group"],
                                                             lesson__discipline=cls.common_data["current_discipline"])
-
         cls.lessons = []
         for lg in cls.lessons_in_group:
             if lg.lesson not in cls.lessons:
@@ -168,11 +172,14 @@ class Data():
     def init_tasks_in_group(cls):
         cls.tasks_in_group = TaskInGroup.objects.filter(group=cls.common_data["current_group"],
                                                         task__discipline=cls.common_data["current_discipline"])
-
         cls.tasks = []
         for tg in cls.tasks_in_group:
             if tg.task not in cls.tasks:
                 cls.tasks.append(tg.task)
+
+    @classmethod
+    def init_control_points(cls):
+        cls.control_points = ControlPoint.objects.filter(discipline=cls.common_data["current_discipline"])
 
     @classmethod
     def init_attendance(cls):
@@ -227,3 +234,55 @@ class Data():
             tg = record.task_in_group
             cls.progress[student_index][tg.task.id] = record
 
+    @classmethod
+    def _calc_rating(cls):
+        for ss in cls.studying_students:
+            base_progress = Progress.objects.filter(studying_student=ss)
+            base_attendance = Attendance.objects.filter(studying_student=ss)
+            for control_point in cls.control_points:
+                progress = base_progress.filter(task_in_group__task__deadline__lte=control_point.date)
+                attendance = base_attendance.filter(lesson_in_group__lesson__date_fact__lte=control_point.date)
+                max_grade = grade = 0
+                for progress_record in progress:
+                    max_grade += progress_record.task_in_group.task.task_coef
+                    if progress_record.passed:
+                        grade += progress_record.task_in_group.task.task_coef
+                for attendance_record in attendance:
+                    max_grade += attendance_record.lesson_in_group.lesson.lesson_coef
+                    if attendance_record.mark == "+":
+                        grade += attendance_record.lesson_in_group.lesson.lesson_coef * attendance_record.grade / MAX_GRADE
+                    elif attendance_record.mark == "оп":
+                        grade += 0.8 * attendance_record.lesson_in_group.lesson.lesson_coef * attendance_record.grade / MAX_GRADE
+                score = int(math.ceil(control_point.max_score * grade/max_grade))
+                if control_point.max_score-score <= 1:
+                    score = control_point.max_score
+
+                rating_record = Rating.objects.filter(studying_student=ss, control_point=control_point)[0]
+                rating_record.score = score
+                rating_record.save()
+
+
+    @classmethod
+    def init_rating(cls):
+        cls.init_studying_students()
+        cls.init_control_points()
+
+        cls._calc_rating()
+
+        rating = Rating.objects.filter(studying_student__group=cls.common_data["current_group"],
+                                       studying_student__discipline=cls.common_data["current_discipline"],
+                                       control_point__discipline=cls.common_data["current_discipline"])
+
+        cls.rating = list()
+        for ss in cls.studying_students:
+            row = dict()
+            for control_point in cls.control_points:
+                row[control_point.id] = 0
+            cls.rating.append(row)
+
+        studying_students_list = list(cls.studying_students)
+        for record in rating:
+            ss = record.studying_student
+            student_index = studying_students_list.index(ss)
+            control_point = record.control_point
+            cls.rating[student_index][control_point.id] = record.score

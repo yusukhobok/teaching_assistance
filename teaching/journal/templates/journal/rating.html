@@ -1,0 +1,45 @@
+{% extends "journal/base.html" %}
+
+{% block link %} action="{% url "journal:rating" %}" {% endblock %}
+
+{% block working_area %}
+    <script>
+        document.getElementById("nav-rating").classList.add("active");
+
+        let tabledata = []
+        {% for ss in studying_students %}
+            tabledata.push(
+                {
+                    "num": {{ forloop.counter}},
+                    "student": "{{ ss.student.journal_name }}"
+                }
+            )
+        {%  endfor %}
+
+        let table = new Tabulator("#example-table", {
+            height: "85vh",
+            data: tabledata,
+            layout: "fitData",
+            columns: [
+                {title: "№", field: "num", sorter: "number", hozAlign: "center", frozen: true},
+                {title: "ФИО", field: "student", sorter: "string", frozen: true},
+            ]
+        });
+
+        let curr_row;
+        {% for row in rating %}
+            curr_row = tabledata[{{ forloop.counter0 }}];
+            {% for k,v in row.items %}
+                curr_row["{{ k }}"] = "{{ v }}";
+            {% endfor %}
+        {% endfor %}
+
+        {%  for control_point in control_points %}
+            table.addColumn({
+                title: "{{ control_point.max_score }}<br>{{ control_point.date|date:"d.m" }}",
+                field: "{{ control_point.id }}",
+                hozAlign: "center", headerSort: false,
+            })
+        {%  endfor %}
+    </script>
+{% endblock %}

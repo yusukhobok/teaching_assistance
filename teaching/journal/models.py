@@ -157,8 +157,8 @@ class Task(models.Model):
     task_kind = models.CharField(
         max_length=10, choices=TASK_KINDS, verbose_name="Вид занятия")
     comments = models.TextField(verbose_name="Комментарии")
-    task_coef = models.FloatField(
-        validators=[MinValueValidator(0), ], verbose_name="Коэффициент за задание", default=1.0)
+    task_coef = models.IntegerField(
+        validators=[MinValueValidator(0), ], verbose_name="Коэффициент за задание", default=1)
 
     class Meta:
         # ordering = ["discipline", "task_kind", "deadline"]
@@ -201,8 +201,8 @@ class Lesson(models.Model):
     lesson_kind = models.CharField(
         max_length=10, choices=LESSON_KINDS, verbose_name="Вид задания")
     comments = models.TextField(verbose_name="Комментарии")
-    lesson_coef = models.FloatField(
-        validators=[MinValueValidator(0), ], verbose_name="Коэффициент за занятие", default=1.0)
+    lesson_coef = models.IntegerField(
+        validators=[MinValueValidator(0), ], verbose_name="Коэффициент за занятие", default=1)
 
     class Meta:
         # ordering = ["discipline", "lesson_kind", "date_plan"]
@@ -244,8 +244,8 @@ class Attendance(models.Model):
         "LessonInGroup", on_delete=models.CASCADE)
     mark = models.CharField(
         max_length=10, choices=ATTENDANCE_MARKS, verbose_name="Отметка о присутствии", default="")
-    grade = models.FloatField(validators=[MinValueValidator(
-        0), ], verbose_name="Балл за работу на занятии", default=10.0)
+    grade = models.IntegerField(validators=[MinValueValidator(
+        0), MaxValueValidator(10)], verbose_name="Балл за работу на занятии", default=10)
 
     class Meta:
         ordering = ["studying_student", "lesson_in_group"]
@@ -277,7 +277,7 @@ class Progress(models.Model):
 class ControlPoint(models.Model):
     discipline = models.ForeignKey("Discipline", on_delete=models.CASCADE)
     date = models.DateField(verbose_name="Дата")
-    max_score = models.FloatField(validators=[MinValueValidator(
+    max_score = models.IntegerField(validators=[MinValueValidator(
         0), ], verbose_name="Максимальный рейтинг")
 
     class Meta:
@@ -298,7 +298,7 @@ class Rating(models.Model):
         "StudyingStudent", on_delete=models.CASCADE)
     control_point = models.ForeignKey(
         "ControlPoint", on_delete=models.CASCADE)
-    score = models.FloatField(validators=[MinValueValidator(
+    score = models.IntegerField(validators=[MinValueValidator(
         0), ], verbose_name="Рейтинг")
 
     class Meta:

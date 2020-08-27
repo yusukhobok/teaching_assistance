@@ -157,3 +157,9 @@ def change_progress(request):
         return redirect("journal:progress")
 
 
+def rating_page(request):
+    Data.prepare_data(request.POST)
+    Data.init_rating()
+    context = {"common_data": Data.common_data, "control_points": Data.control_points,
+               "studying_students": Data.studying_students, "rating": Data.rating}
+    return render(request, "journal/rating.html", context=context)
