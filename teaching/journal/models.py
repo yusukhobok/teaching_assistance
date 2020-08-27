@@ -161,7 +161,8 @@ class Task(models.Model):
         validators=[MinValueValidator(0), ], verbose_name="Коэффициент за задание", default=1.0)
 
     class Meta:
-        ordering = ["discipline", "task_kind", "deadline"]
+        # ordering = ["discipline", "task_kind", "deadline"]
+        ordering = ["discipline", "id"]
         verbose_name = "Задание"
         verbose_name_plural = "Задания"
 
@@ -204,7 +205,8 @@ class Lesson(models.Model):
         validators=[MinValueValidator(0), ], verbose_name="Коэффициент за занятие", default=1.0)
 
     class Meta:
-        ordering = ["discipline", "lesson_kind", "date_plan"]
+        # ordering = ["discipline", "lesson_kind", "date_plan"]
+        ordering = ["discipline", "id"]
         verbose_name = "Занятие"
         verbose_name_plural = "Занятия"
 
@@ -259,7 +261,7 @@ class Progress(models.Model):
         "StudyingStudent", on_delete=models.CASCADE)
     task_in_group = models.ForeignKey("TaskInGroup", on_delete=models.CASCADE)
     passed = models.BooleanField(verbose_name="Сдано", default=False)
-    grade = models.FloatField(validators=[MinValueValidator(
+    grade = models.IntegerField(validators=[MinValueValidator(
         0), ], verbose_name="Оценка за задание", blank=True, null=True)
     delivery_date = models.DateField(verbose_name="Дата сдачи", null=True)
 

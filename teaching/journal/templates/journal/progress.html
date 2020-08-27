@@ -1,0 +1,112 @@
+{% extends "journal/base.html" %}
+
+{% block link %} action="{% url "journal:progress" %}" {% endblock %}
+
+{% block working_area %}
+    <script>
+        document.getElementById("nav-progress").classList.add("active");
+
+        let prepareProgress = (cell) => {
+            const newValue = cell._cell.value;
+            const student_position = table.getRowPosition(cell._cell.row, false);
+            const task_id = cell.getColumn().getField();
+            const formData = new FormData();
+            formData.append('newValue', newValue);
+            formData.append('student_position', student_position);
+            formData.append('task_id', task_id);
+            const csrftoken = document.cookie.replace(/(?:(?:^|.*;\s*)csrftoken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            const headers = {"X-CSRFToken": csrftoken};
+            const body = formData;
+            return {headers, body};
+        };
+
+        let tabledata = []
+        {% for ss in studying_students %}
+            tabledata.push(
+                {
+                    "num": {{ forloop.counter}},
+                    "student": "{{ ss.student.journal_name }}"
+                }
+            )
+        {%  endfor %}
+
+        let table = new Tabulator("#example-table", {
+            height: "85vh",
+            data: tabledata,
+            layout: "fitData",
+            columns: [
+                {title: "№", field: "num", sorter: "number", hozAlign: "center", frozen: true},
+                {title: "ФИО", field: "student", sorter: "string", frozen: true},
+            ]
+        });
+
+        let curr_row;
+        let value;
+        {% for row in progress %}
+            curr_row = tabledata[{{ forloop.counter0 }}];
+            {% for k,v in row.items %}
+                {% if v.passed == False %}
+                    value = "";
+                {% elif v.grade == None %}
+                    value = "{{ v.delivery_date|date:"Y-m-d" }}"
+                {% else %}
+                    value = "({{ v.grade }}) {{ v.delivery_date|date:"Y-m-d" }}"
+                {% endif %}
+                curr_row["{{ k }}"] = value;
+            {% endfor %}
+        {% endfor %}
+
+        {%  for task in tasks %}
+            table.addColumn({
+                title: "{{ task.abbreviation }}<br>{{ task.deadline|date:"d.m" }}",
+                field: "{{ task.id }}",
+                hozAlign: "center", headerSort: false,
+                formatter: (cell, formatterParams, onRendered) => {
+                    value = cell.getValue();
+                    if (value === undefined)
+                        cell.getElement().style.backgroundColor = "gray";
+                    else {
+                        const space_index = value.indexOf(" ");
+                        let str_delivery_date;
+                        if (space_index !== -1)
+                            str_delivery_date = value.slice(space_index + 1);
+                        else
+                            str_delivery_date = value;
+                        const delivery_date = Date.parse(str_delivery_date);
+                        const deadline = Date.parse("{{ task.deadline|date:"Y-m-d" }}");
+                        if (delivery_date <= deadline) {
+                            cell.getElement().style.color = "green";
+                        } else {
+                            cell.getElement().style.color = "red";
+                        }
+                        cell.getElement().style.fontWeight = "bold";
+                    }
+                    return cell.getValue();
+                },
+                cellClick: async (e, cell) => {
+                    if (!e.ctrlKey && !e.altKey) return;
+                    if (cell.getValue() === undefined) return;
+                    if (e.ctrlKey) {
+                        if (cell.getValue() === "")
+                            cell.setValue("{{ common_data.current_date|date:"Y-m-d" }}");
+                        else
+                            cell.setValue("");
+                    } else {
+                        let grade = prompt("Оценка", "5");
+                        if (grade === null || grade === undefined || grade === "") return
+                        grade = Number(grade);
+                        if (grade === null || grade === undefined || isNaN(grade)) return
+                        cell.setValue(`(${grade}) {{ common_data.current_date|date:"Y-m-d" }}`);
+                    }
+
+                    res = prepareProgress(cell);
+                    let response = await fetch("{% url "journal:change_progress" %}", {
+                        method: "POST", credentials: 'include', headers: res["headers"],
+                        body: res["body"]
+                    });
+                }
+
+            })
+        {%  endfor %}
+    </script>
+{% endblock %}

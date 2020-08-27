@@ -25,7 +25,6 @@
             tabledata.push(
                 {
                     "num": {{ forloop.counter}},
-                    //"student": "{{ ss.student.last_name }} {{ ss.student.first_name }}"
                     "student": "{{ ss.student.journal_name }}"
                 }
             )
@@ -54,7 +53,6 @@
                 title: "{{ lesson.abbreviation }}<br>{{ lesson.date_fact|date:"d.m" }}",
                 field: "{{ lesson.id }}",
                 hozAlign: "center", headerSort: false,
-                //editor: true, editable: (cell) => cell.getValue() !== undefined,
                 formatter: (cell, formatterParams, onRendered) => {
                     value = cell.getValue();
                     if (value === undefined)

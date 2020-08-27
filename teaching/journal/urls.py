@@ -13,5 +13,7 @@ urlpatterns = [
     path("change_tasks/<str:field>", views.change_tasks, name="change_tasks"),
     path("attendance/", views.attendance_page, name="attendance"),
     path("change_attendance/", views.change_attendance, name="change_attendance"),
+    path("progress/", views.progress_page, name="progress"),
+    path("change_progress/", views.change_progress, name="change_progress"),
 
 ]

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 
+import datetime
 from django.http import HttpResponse, Http404
 from django.template import loader
 from django.views import generic
@@ -109,5 +110,50 @@ def change_attendance(request):
         return redirect("journal:attendance")
 
 
+def progress_page(request):
+    Data.prepare_data(request.POST)
+    Data.init_progress()
+    context = {"common_data": Data.common_data, "tasks": Data.tasks, "studying_students": Data.studying_students,
+               "progress": Data.progress}
+    return render(request, "journal/progress.html", context=context)
+
+
+def change_progress(request):
+    newValue = request.POST.get("newValue", None)
+    student_position = request.POST.get("student_position", None)
+    task_id = request.POST.get("task_id", None)
+    if (newValue is not None) and (student_position is not None) and (task_id is not None):
+        student_position = int(student_position)
+
+        task_id = int(task_id)
+        student_id = Data.studying_students[student_position].student.id
+        ss = StudyingStudent.objects.filter(student__id=student_id)[0]
+        tg = TaskInGroup.objects.filter(task__id=task_id, subgroup_number=ss.subgroup_number)[0]
+        progress = Progress.objects.filter(studying_student=ss, task_in_group=tg)
+        progress = progress[0]
+
+        if newValue == "":
+            progress.passed = False
+            progress.grade = None
+            progress.delivery_date = None
+        else:
+            progress.passed = True
+            try:
+                space_index = newValue.index(" ")
+                date_string = newValue[space_index + 1:]
+                grade_string = newValue[1:space_index - 1]
+            except ValueError:
+                date_string = newValue
+                grade_string = None
+
+            if grade_string is None:
+                progress.grade = None
+            else:
+                progress.grade = int(grade_string)
+            progress.delivery_date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
+        progress.save()
+        return HttpResponse("CHANGE")
+    else:
+        return redirect("journal:progress")
 
 

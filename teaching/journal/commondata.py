@@ -22,6 +22,7 @@ class Data():
     tasks_in_group = None
     tasks = None
     attendance = None
+    progress = None
 
     @classmethod
     def set_today(cls):
@@ -158,7 +159,6 @@ class Data():
         cls.lessons_in_group = LessonInGroup.objects.filter(group=cls.common_data["current_group"],
                                                             lesson__discipline=cls.common_data["current_discipline"])
 
-        # TODO:можно ли это решить внутренними средствами Django? SQL?
         cls.lessons = []
         for lg in cls.lessons_in_group:
             if lg.lesson not in cls.lessons:
@@ -169,7 +169,6 @@ class Data():
         cls.tasks_in_group = TaskInGroup.objects.filter(group=cls.common_data["current_group"],
                                                         task__discipline=cls.common_data["current_discipline"])
 
-        # TODO:можно ли это решить внутренними средствами Django? SQL?
         cls.tasks = []
         for tg in cls.tasks_in_group:
             if tg.task not in cls.tasks:
@@ -183,7 +182,8 @@ class Data():
         attendance = Attendance.objects.filter(studying_student__group=cls.common_data["current_group"],
                                                studying_student__discipline=cls.common_data["current_discipline"],
                                                lesson_in_group__group=cls.common_data["current_group"],
-                                               lesson_in_group__lesson__discipline=cls.common_data["current_discipline"],
+                                               lesson_in_group__lesson__discipline=cls.common_data[
+                                                   "current_discipline"],
                                                studying_student__subgroup_number=F("lesson_in_group__subgroup_number"))
 
         cls.attendance = list()
@@ -191,8 +191,7 @@ class Data():
             row = dict()
             for lg in cls.lessons_in_group:
                 if ss.subgroup_number == lg.subgroup_number:
-                    # att = Attendance.objects.filter(studying_student=ss, lesson_in_group=lg)[0]
-                    row[lg.lesson.id] = ""  # att.mark
+                    row[lg.lesson.id] = ""
             cls.attendance.append(row)
 
         studying_students_list = list(cls.studying_students)
@@ -201,4 +200,30 @@ class Data():
             student_index = studying_students_list.index(ss)
             lg = record.lesson_in_group
             cls.attendance[student_index][lg.lesson.id] = record.mark
+
+    @classmethod
+    def init_progress(cls):
+        cls.init_tasks_in_group()
+        cls.init_studying_students()
+
+        progress = Progress.objects.filter(studying_student__group=cls.common_data["current_group"],
+                                           studying_student__discipline=cls.common_data["current_discipline"],
+                                           task_in_group__group=cls.common_data["current_group"],
+                                           task_in_group__task__discipline=cls.common_data["current_discipline"],
+                                           studying_student__subgroup_number=F("task_in_group__subgroup_number"))
+
+        cls.progress = list()
+        for ss in cls.studying_students:
+            row = dict()
+            for tg in cls.tasks_in_group:
+                if ss.subgroup_number == tg.subgroup_number:
+                    row[tg.task.id] = [False, 0]
+            cls.progress.append(row)
+
+        studying_students_list = list(cls.studying_students)
+        for record in progress:
+            ss = record.studying_student
+            student_index = studying_students_list.index(ss)
+            tg = record.task_in_group
+            cls.progress[student_index][tg.task.id] = record
 
