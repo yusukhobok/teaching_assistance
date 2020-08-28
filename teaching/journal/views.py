@@ -21,7 +21,9 @@ def extract_value_and_position(request):
 
 
 def index_page(request):
-    return render(request, "journal/base.html")
+    Data.prepare_data(request.POST)
+    context = {"common_data": Data.common_data, "week_num": 1}
+    return render(request, "journal/index.html", context=context)
 
 
 def students_page(request):
@@ -163,3 +165,4 @@ def rating_page(request):
     context = {"common_data": Data.common_data, "control_points": Data.control_points,
                "studying_students": Data.studying_students, "rating": Data.rating}
     return render(request, "journal/rating.html", context=context)
+

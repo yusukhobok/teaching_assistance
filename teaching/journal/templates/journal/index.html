@@ -1,0 +1,23 @@
+{% extends "journal/base.html" %}
+
+{% block link %} action="{% url "journal:index" %}" {% endblock %}
+
+{% block working_area %}
+
+{#<button type="button" class="btn btn-secondary">1</button>#}
+    <script>
+        /*for (let i=1; i<=16; i++) {
+            btn = document.createElement("button");
+            document.getElementById("example-table").append(btn);
+            btn.type = "button";
+            btn.classList.add("btn");
+            if (i=={{ week_num }})
+                btn.classList.add("btn-primary");
+            else
+                btn.classList.add("btn-secondary");
+            btn.innerText = i;
+            btn.style.paddingRight="2";
+        }*/
+    </script>
+
+{% endblock %}

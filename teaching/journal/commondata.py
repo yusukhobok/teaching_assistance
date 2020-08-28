@@ -253,14 +253,13 @@ class Data():
                         grade += attendance_record.lesson_in_group.lesson.lesson_coef * attendance_record.grade / MAX_GRADE
                     elif attendance_record.mark == "оп":
                         grade += 0.8 * attendance_record.lesson_in_group.lesson.lesson_coef * attendance_record.grade / MAX_GRADE
-                score = int(math.ceil(control_point.max_score * grade/max_grade))
-                if control_point.max_score-score <= 1:
+                score = int(math.ceil(control_point.max_score * grade / max_grade))
+                if control_point.max_score - score <= 1:
                     score = control_point.max_score
 
                 rating_record = Rating.objects.filter(studying_student=ss, control_point=control_point)[0]
                 rating_record.score = score
                 rating_record.save()
-
 
     @classmethod
     def init_rating(cls):

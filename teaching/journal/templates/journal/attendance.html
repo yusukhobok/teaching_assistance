@@ -73,24 +73,45 @@
                     return cell.getValue();
                 },
                 cellClick: async (e, cell) => {
-                    if (!e.ctrlKey) return;
+                    if (!e.ctrlKey && !e.altKey) return;
                     if (cell.getValue() === undefined) return;
-                    switch (cell.getValue()) {
-                        case "":
-                            cell.setValue("+");
-                            break;
-                        case "+":
-                            cell.setValue("н");
-                            break;
-                        case "н":
-                            cell.setValue("оп");
-                            break;
-                        case "оп":
-                            cell.setValue("н(у)");
-                            break;
-                        case "н(у)":
-                            cell.setValue("");
-                            break;
+                    if (e.ctrlKey) {
+                        switch (cell.getValue()) {
+                            case "":
+                                cell.setValue("+");
+                                break;
+                            case "+":
+                                cell.setValue("н");
+                                break;
+                            case "н":
+                                cell.setValue("оп");
+                                break;
+                            case "оп":
+                                cell.setValue("н(у)");
+                                break;
+                            case "н(у)":
+                                cell.setValue("");
+                                break;
+                        }
+                    }
+                    else {
+                        switch (cell.getValue()) {
+                            case "":
+                                cell.setValue("н(у)");
+                                break;
+                            case "+":
+                                cell.setValue("");
+                                break;
+                            case "н":
+                                cell.setValue("+");
+                                break;
+                            case "оп":
+                                cell.setValue("н");
+                                break;
+                            case "н(у)":
+                                cell.setValue("оп");
+                                break;
+                        }
                     }
                     res = prepareAttendance(cell);
                     let response = await fetch("{% url "journal:change_attendance" %}", {

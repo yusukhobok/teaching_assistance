@@ -16,5 +16,4 @@ urlpatterns = [
     path("progress/", views.progress_page, name="progress"),
     path("change_progress/", views.change_progress, name="change_progress"),
     path("rating/", views.rating_page, name="rating"),
-
 ]
