@@ -11,6 +11,10 @@ class actions():
         db.clear_all()
 
     @staticmethod
+    def clear_semester(semester_id: int):
+        db.clear_semester(semester_id)
+
+    @staticmethod
     def get_semester(academic_year: str, season: int):
         if academic_year not in db.ACADEMIC_YEARS:
             raise ValueError("Academic year is incorrect")
@@ -29,7 +33,8 @@ class actions():
         semester_id = db.insert_record('journal_semester',
                                        {
                                            "academic_year": academic_year,
-                                           "season": season
+                                           "season": season,
+                                           "is_current": False,
                                        })
         return semester_id
 
@@ -39,7 +44,8 @@ class actions():
                                     {
                                         "group_number": group_number,
                                         "course_number": course_number,
-                                        "semester_id": semester_id
+                                        "semester_id": semester_id,
+                                        "is_current": False,
                                     })
         return group_id
 
@@ -49,7 +55,8 @@ class actions():
                                          {
                                              "name": name,
                                              "short_name": short_name,
-                                             "semester_id": semester_id
+                                             "semester_id": semester_id,
+                                             "is_current": False,
                                          })
         return discipline_id
 
@@ -96,7 +103,7 @@ class actions():
         students_data.apply(add_student, axis=1)
 
     @staticmethod
-    def insert_task(deadline: str, topic: str, abbreviation: str, task_kind: str, comments: str, task_coef: float, discipline_id: int):
+    def insert_task(deadline: str, topic: str, abbreviation: str, task_kind: str, comments: str, task_coef: int, discipline_id: int):
         TASK_KINDS = ("LB", "PR", "KONTR", "TEST", "RGR", "KR",
                       "KP", "SECTION", "ALLOW", "ZACHET", "EXAM")
         if task_kind not in TASK_KINDS:
@@ -118,6 +125,7 @@ class actions():
         tasks_data = pd.read_csv(filename, sep=';', header=0)
         tasks_data = tasks_data.dropna(how='all')
         tasks_data.fillna('', inplace=True)
+        tasks_data["task_coef"] = tasks_data["task_coef"].astype("int32")
         tasks_data["deadline"] = pd.to_datetime(
             tasks_data['deadline'], format='%d.%m.%Y')
         # print(tasks_data)
@@ -163,7 +171,7 @@ class actions():
 
         def add_lesson(row):
             lesson_id = actions.insert_lesson(row['date_plan'], row['topic'], row['abbreviation'],
-                                      row['lesson_kind'], row['comments'], discipline_id, lesson_coef=1)
+                                      row['lesson_kind'], row['comments'], discipline_id, lesson_coef=lesson_coef)
             for group_id, subgroup_number in groups_and_subgroups:
                 db.insert_record('journal_lessoningroup',
                                  {
@@ -188,6 +196,7 @@ class actions():
         control_points_data = pd.read_csv(filename, sep=';', header=0)
         control_points_data = control_points_data.dropna(how='all')
         control_points_data.fillna('', inplace=True)
+        control_points_data["max_score"] = control_points_data["max_score"].astype("int32")
         control_points_data["date"] = pd.to_datetime(
             control_points_data['date'], format='%d.%m.%Y')
         # print(control_points_data)

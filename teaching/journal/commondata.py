@@ -39,52 +39,55 @@ class Data():
         cls.common_data["current_date"] = date
 
     @classmethod
-    def set_current_semester(cls, id):
+    def set_current_semester(cls, id: int):
         if cls.common_data["semesters"] is None:
-            return
+            return None
         try:
             if cls.common_data["current_semester"].id == id:
-                return
+                return False
             for semester in cls.common_data["semesters"]:
                 semester.is_current = False
                 semester.save()
             cls.common_data["current_semester"] = Semester.objects.filter(id=id)[0]
             cls.common_data["current_semester"].is_current = True
             cls.common_data["current_semester"].save()
+            return True
         except IndexError:
-            pass
+            return None
 
     @classmethod
-    def set_current_discipline(cls, id):
+    def set_current_discipline(cls, id: int):
         if cls.common_data["disciplines"] is None:
-            return
+            return None
         try:
             if cls.common_data["current_discipline"].id == id:
-                return
+                return False
             for discipline in cls.common_data["disciplines"]:
                 discipline.is_current = False
                 discipline.save()
             cls.common_data["current_discipline"] = Discipline.objects.filter(id=id)[0]
             cls.common_data["current_discipline"].is_current = True
             cls.common_data["current_discipline"].save()
+            return True
         except IndexError:
-            pass
+            return None
 
     @classmethod
-    def set_current_group(cls, id):
+    def set_current_group(cls, id: int):
         if cls.common_data["groups"] is None:
-            return
+            return None
         try:
             if cls.common_data["current_group"].id == id:
-                return
+                return False
             for group in cls.common_data["groups"]:
                 group.is_current = False
                 group.save()
             cls.common_data["current_group"] = Group.objects.filter(id=id)[0]
             cls.common_data["current_group"].is_current = True
             cls.common_data["current_group"].save()
+            return True
         except IndexError:
-            pass
+            return None
 
     @classmethod
     def load_current_semester(cls):
@@ -142,9 +145,14 @@ class Data():
 
     @classmethod
     def refresh_current_values(cls, POST):
-        cls.set_current_semester(POST["semester"])
-        cls.set_current_discipline(POST["discipline"])
-        cls.set_current_group(POST["group"])
+        if cls.set_current_semester(int(POST["semester"])):
+            cls.load_disciplines()
+            cls.load_current_discipline()
+            cls.load_groups()
+            cls.load_current_group()
+        else:
+            cls.set_current_discipline(int(POST["discipline"]))
+            cls.set_current_group(int(POST["group"]))
         cls.set_current_date(POST["date"])
 
     @classmethod

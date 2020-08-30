@@ -65,6 +65,12 @@ class db():
         for table in db.TABLES:
             db.apply_to_db(SQL(f"DELETE FROM {table}"))
 
+
+    @staticmethod
+    def clear_semester(semester_id: int):
+        db.apply_to_db(SQL("DELETE FROM journal_semester WHERE id = '%s'"), semester_id)
+
+
     @staticmethod
     def insert_record(table_name: str, params: dict):
         keys = list(params.keys())

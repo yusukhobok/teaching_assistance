@@ -22,6 +22,7 @@ def extract_value_and_position(request):
 
 def index_page(request):
     Data.prepare_data(request.POST)
+    print(Data.common_data)
     context = {"common_data": Data.common_data, "week_num": 1}
     return render(request, "journal/index.html", context=context)
 
