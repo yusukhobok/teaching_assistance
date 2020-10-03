@@ -105,8 +105,8 @@ class init_db():
 
 
 if __name__ == "__main__":
-    init_db.clear_all()
-    init_db.add_semester()
-    init_db.add_web_design()
+    # init_db.clear_all()
+    # init_db.add_semester()
+    # init_db.add_web_design()
     # init_db.get_semester()
-    init_db.add_porkp()
+    # init_db.add_porkp()
