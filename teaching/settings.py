@@ -15,8 +15,8 @@ import os
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '0crwhe!e#3qk)jwl$k2d_ndhue)78b4o_k7&h3e)mt6_)@w0=w')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-# DEBUG = True
+# DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'infinite-island-40793.herokuapp.com']
 
