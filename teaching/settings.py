@@ -72,10 +72,15 @@ WSGI_APPLICATION = 'teaching.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'teaching_assistance',
-        'USER': 'yuri',
-        'PASSWORD': 'yurist',
-        'HOST': '127.0.0.1',
+        # 'NAME': 'teaching_assistance',
+        # 'USER': 'yuri',
+        # 'PASSWORD': 'yurist',
+        # 'HOST': '127.0.0.1',
+        # 'PORT': '5432',
+        'NAME': 'd63ohs3piskkra',
+        'USER': 'gwblhcgcsdepiu',
+        'PASSWORD': 'b3502ef33a769e1ebff8593ae3b8fbd038f296ea5584584c2253e18175607370',
+        'HOST': 'ec2-54-211-169-227.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
