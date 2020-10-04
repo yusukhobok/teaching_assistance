@@ -23,8 +23,6 @@ def extract_value_and_position(request):
 
 def index_page(request):
     Data.prepare_data(request.POST)
-    print(Data.common_data)
-    sys.stdout.flush()
     context = {"common_data": Data.common_data, "week_num": 1}
     return render(request, "journal/index.html", context=context)
 
@@ -36,7 +34,8 @@ def students_page(request):
         context = {"common_data": Data.common_data, "studying_students": Data.studying_students}
         return render(request, "journal/students.html", context=context)
     else:
-        return students_page(request)
+        return index_page(request)
+
 
 
 def change_students(request, field):
