@@ -34,6 +34,7 @@ def students_page(request):
         context = {"common_data": Data.common_data, "studying_students": Data.studying_students}
         return render(request, "journal/students.html", context=context)
     else:
+        request.POST = []
         return index_page(request)
 
 
