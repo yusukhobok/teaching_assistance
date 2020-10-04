@@ -38,7 +38,6 @@ def students_page(request):
         return index_page(request)
 
 
-
 def change_students(request, field):
     newValue, position = extract_value_and_position(request)
     if newValue is not None and position is not None:
@@ -56,8 +55,12 @@ def change_students(request, field):
 def lessons_page(request):
     Data.prepare_data(request.POST)
     Data.init_lessons_in_group()
-    context = {"common_data": Data.common_data, "lessons": Data.lessons}
-    return render(request, "journal/lessons.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "lessons": Data.lessons}
+        return render(request, "journal/lessons.html", context=context)
+    else:
+        request.POST = []
+        return index_page(request)
 
 
 def change_lessons(request, field):
@@ -75,8 +78,12 @@ def change_lessons(request, field):
 def tasks_page(request):
     Data.prepare_data(request.POST)
     Data.init_tasks_in_group()
-    context = {"common_data": Data.common_data, "tasks": Data.tasks}
-    return render(request, "journal/tasks.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "tasks": Data.tasks}
+        return render(request, "journal/tasks.html", context=context)
+    else:
+        request.POST = []
+        return index_page(request)
 
 
 def change_tasks(request, field):
@@ -94,9 +101,13 @@ def change_tasks(request, field):
 def attendance_page(request):
     Data.prepare_data(request.POST)
     Data.init_attendance()
-    context = {"common_data": Data.common_data, "lessons": Data.lessons, "studying_students": Data.studying_students,
-               "attendance": Data.attendance}
-    return render(request, "journal/attendance.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "lessons": Data.lessons, "studying_students": Data.studying_students,
+                   "attendance": Data.attendance}
+        return render(request, "journal/attendance.html", context=context)
+    else:
+        request.POST = []
+        return index_page(request)
 
 
 def change_attendance(request):
@@ -121,9 +132,13 @@ def change_attendance(request):
 def progress_page(request):
     Data.prepare_data(request.POST)
     Data.init_progress()
-    context = {"common_data": Data.common_data, "tasks": Data.tasks, "studying_students": Data.studying_students,
-               "progress": Data.progress}
-    return render(request, "journal/progress.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "tasks": Data.tasks, "studying_students": Data.studying_students,
+                   "progress": Data.progress}
+        return render(request, "journal/progress.html", context=context)
+    else:
+        request.POST = []
+        return index_page(request)
 
 
 def change_progress(request):
@@ -168,7 +183,11 @@ def change_progress(request):
 def rating_page(request):
     Data.prepare_data(request.POST)
     Data.init_rating()
-    context = {"common_data": Data.common_data, "control_points": Data.control_points,
-               "studying_students": Data.studying_students, "rating": Data.rating}
-    return render(request, "journal/rating.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "control_points": Data.control_points,
+                   "studying_students": Data.studying_students, "rating": Data.rating}
+        return render(request, "journal/rating.html", context=context)
+    else:
+        request.POST = []
+        return index_page(request)
 
