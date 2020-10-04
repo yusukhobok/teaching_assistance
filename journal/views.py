@@ -32,8 +32,11 @@ def index_page(request):
 def students_page(request):
     Data.prepare_data(request.POST)
     Data.init_studying_students()
-    context = {"common_data": Data.common_data, "studying_students": Data.studying_students}
-    return render(request, "journal/students.html", context=context)
+    if Data.common_data["current_semester"] is not None:
+        context = {"common_data": Data.common_data, "studying_students": Data.studying_students}
+        return render(request, "journal/students.html", context=context)
+    else:
+        return students_page(request)
 
 
 def change_students(request, field):
