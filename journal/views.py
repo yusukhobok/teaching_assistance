@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 
 import datetime
+import sys
 from django.http import HttpResponse, Http404
 from django.template import loader
 from django.views import generic
@@ -23,6 +24,7 @@ def extract_value_and_position(request):
 def index_page(request):
     Data.prepare_data(request.POST)
     print(Data.common_data)
+    sys.stdout.flush()
     context = {"common_data": Data.common_data, "week_num": 1}
     return render(request, "journal/index.html", context=context)
 
